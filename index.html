@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <title>FlowTradeAI Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -26,15 +24,8 @@
       border-bottom: 1px solid #1f2937;
     }
 
-    header h1 {
-      font-size: 20px;
-      color: #60a5fa;
-    }
-
-    header span {
-      font-size: 13px;
-      color: #9ca3af;
-    }
+    header h1 { font-size: 20px; color: #60a5fa; }
+    header span { font-size: 13px; color: #9ca3af; }
 
     .container {
       padding: 30px;
@@ -56,23 +47,23 @@
     }
 
     .card h3 {
-      font-size: 15px;
-      margin-bottom: 10px;
+      font-size: 14px;
+      margin-bottom: 8px;
       color: #93c5fd;
     }
 
     .stat {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: bold;
     }
 
     .ai-box {
-      margin-top: 15px;
+      margin-top: 10px;
       padding: 12px;
       background: #020617;
       border-radius: 6px;
       font-size: 14px;
-      min-height: 50px;
+      min-height: 60px;
     }
 
     button {
@@ -92,47 +83,46 @@
       font-size: 12px;
       color: #6b7280;
     }
-
-    canvas {
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
 
 <header>
   <h1>FlowTradeAI</h1>
-  <span>AI Trading Dashboard</span>
+  <span>AI Paper Trading Dashboard</span>
 </header>
 
 <div class="container">
   <div class="grid">
 
     <div class="card">
-      <h3>Portfolio Balance</h3>
-      <div class="stat">$12,480</div>
-    </div>
-
-    <div class="card">
-      <h3>Active Trades</h3>
-      <div class="stat">3</div>
-    </div>
-
-    <div class="card">
-      <h3>Bitcoin (BTC)</h3>
+      <h3>BTC Price</h3>
       <div id="btcPrice" class="stat">Loading...</div>
-      <canvas id="btcChart"></canvas>
     </div>
 
     <div class="card">
-      <h3>Ethereum (ETH)</h3>
-      <div id="ethPrice" class="stat">Loading...</div>
-      <canvas id="ethChart"></canvas>
+      <h3>Signal</h3>
+      <div id="signal" class="stat">-</div>
+    </div>
+
+    <div class="card">
+      <h3>Position</h3>
+      <div id="position" class="stat">-</div>
+    </div>
+
+    <div class="card">
+      <h3>Entry Price</h3>
+      <div id="entry" class="stat">-</div>
+    </div>
+
+    <div class="card">
+      <h3>PnL (%)</h3>
+      <div id="pnl" class="stat">-</div>
     </div>
 
     <div class="card">
       <h3>Ask FlowTradeAI</h3>
-      <div id="aiAnswer" class="ai-box">Click the button to get AI insight.</div>
+      <div id="aiAnswer" class="ai-box">Click the button to get AI signal.</div>
       <button onclick="askAI()">Ask AI</button>
     </div>
 
@@ -140,71 +130,40 @@
 </div>
 
 <footer>
-  © 2026 FlowTradeAI • Not financial advice
+  © 2026 FlowTradeAI • Paper trading only
 </footer>
 
 <script>
   async function askAI() {
     const box = document.getElementById("aiAnswer");
-    box.innerText = "AI is analyzing the market...";
+    box.innerText = "AI analyzing market...";
 
     try {
       const res = await fetch("https://flowtradeai-backend-v3.onrender.com/ai", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: "market" })
+        headers: { "Content-Type": "application/json" }
       });
+
       const data = await res.json();
-      box.innerText = data.ai;
+
+      document.getElementById("btcPrice").innerText =
+        "$" + data.price.toLocaleString();
+
+      document.getElementById("signal").innerText =
+        data.signal + " (" + data.confidence + "%)";
+
+      document.getElementById("position").innerText = data.position;
+      document.getElementById("entry").innerText =
+        data.entryPrice ? "$" + data.entryPrice.toLocaleString() : "-";
+
+      document.getElementById("pnl").innerText =
+        data.pnl ? data.pnl + "%" : "-";
+
+      box.innerText = data.explanation;
     } catch {
       box.innerText = "Connection error.";
     }
   }
-
-  let btcData = [];
-  let ethData = [];
-  let labels = [];
-
-  const btcChart = new Chart(document.getElementById("btcChart"), {
-    type: "line",
-    data: { labels, datasets: [{ label: "BTC", data: btcData }] }
-  });
-
-  const ethChart = new Chart(document.getElementById("ethChart"), {
-    type: "line",
-    data: { labels, datasets: [{ label: "ETH", data: ethData }] }
-  });
-
-  async function loadPrices() {
-    try {
-      const res = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
-      );
-      const data = await res.json();
-
-      const time = new Date().toLocaleTimeString();
-      labels.push(time);
-      btcData.push(data.bitcoin.usd);
-      ethData.push(data.ethereum.usd);
-
-      if (labels.length > 10) {
-        labels.shift();
-        btcData.shift();
-        ethData.shift();
-      }
-
-      document.getElementById("btcPrice").innerText =
-        "$" + data.bitcoin.usd.toLocaleString();
-      document.getElementById("ethPrice").innerText =
-        "$" + data.ethereum.usd.toLocaleString();
-
-      btcChart.update();
-      ethChart.update();
-    } catch {}
-  }
-
-  loadPrices();
-  setInterval(loadPrices, 30000);
 </script>
 
 </body>
