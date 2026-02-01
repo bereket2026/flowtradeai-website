@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FlowTradeAI</title>
+</head>
+<body>
+  <h1>FlowTradeAI</h1>
+  <p id="answer">Click to ask AI</p>
+  <button onclick="askAI()">Ask AI</button>
+
+  <script>
+    async function askAI() {
+      document.getElementById("answer").innerText = "AI is thinking...";
+
+      const res = await fetch("https://flowtradeai-backend-v3.onrender.com/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: "market" })
+      });
+
+      const data = await res.json();
+      document.getElementById("answer").innerText = data.ai;
+    }
+  </script>
+</body>
+</html>
