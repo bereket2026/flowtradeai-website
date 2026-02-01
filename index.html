@@ -4,12 +4,10 @@
   <meta charset="UTF-8" />
   <title>FlowTradeAI Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
+      margin: 0;
       font-family: Arial, Helvetica, sans-serif;
       background: #0b1220;
       color: #e5e7eb;
@@ -24,8 +22,10 @@
       border-bottom: 1px solid #1f2937;
     }
 
-    header h1 { font-size: 20px; color: #60a5fa; }
-    header span { font-size: 13px; color: #9ca3af; }
+    header h1 {
+      color: #60a5fa;
+      font-size: 20px;
+    }
 
     .container {
       padding: 30px;
@@ -35,46 +35,54 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 20px;
     }
 
     .card {
       background: #111827;
+      border: 1px solid #1f2937;
       border-radius: 10px;
       padding: 20px;
-      border: 1px solid #1f2937;
     }
 
     .card h3 {
+      color: #93c5fd;
       font-size: 14px;
       margin-bottom: 8px;
-      color: #93c5fd;
     }
 
     .stat {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
-    }
-
-    .ai-box {
-      margin-top: 10px;
-      padding: 12px;
-      background: #020617;
-      border-radius: 6px;
-      font-size: 14px;
-      min-height: 60px;
     }
 
     button {
-      margin-top: 15px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
+      margin-top: 10px;
+      background: #2563eb;
       border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #1f2937;
+      text-align: left;
+    }
+
+    th {
+      color: #9ca3af;
     }
 
     footer {
@@ -89,15 +97,15 @@
 
 <header>
   <h1>FlowTradeAI</h1>
-  <span>AI Paper Trading Dashboard</span>
+  <span>Paper Trading Dashboard</span>
 </header>
 
 <div class="container">
-  <div class="grid">
 
+  <div class="grid">
     <div class="card">
       <h3>BTC Price</h3>
-      <div id="btcPrice" class="stat">Loading...</div>
+      <div id="price" class="stat">-</div>
     </div>
 
     <div class="card">
@@ -111,59 +119,67 @@
     </div>
 
     <div class="card">
-      <h3>Entry Price</h3>
-      <div id="entry" class="stat">-</div>
-    </div>
-
-    <div class="card">
       <h3>PnL (%)</h3>
       <div id="pnl" class="stat">-</div>
     </div>
 
     <div class="card">
       <h3>Ask FlowTradeAI</h3>
-      <div id="aiAnswer" class="ai-box">Click the button to get AI signal.</div>
       <button onclick="askAI()">Ask AI</button>
+      <div id="explanation" style="margin-top:10px;font-size:13px;"></div>
     </div>
-
   </div>
+
+  <div class="card" style="margin-top:30px;">
+    <h3>Trade History</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Action</th>
+          <th>Price</th>
+          <th>PnL %</th>
+        </tr>
+      </thead>
+      <tbody id="historyTable">
+        <tr><td colspan="4">No trades yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
 </div>
 
 <footer>
-  © 2026 FlowTradeAI • Paper trading only
+  © 2026 FlowTradeAI • Demo / Paper Trading Only
 </footer>
 
 <script>
-  async function askAI() {
-    const box = document.getElementById("aiAnswer");
-    box.innerText = "AI analyzing market...";
+async function askAI() {
+  const res = await fetch("https://flowtradeai-backend-v3.onrender.com/ai", {
+    method: "POST"
+  });
+  const data = await res.json();
 
-    try {
-      const res = await fetch("https://flowtradeai-backend-v3.onrender.com/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
+  document.getElementById("price").innerText = "$" + data.price.toLocaleString();
+  document.getElementById("signal").innerText = data.signal;
+  document.getElementById("position").innerText = data.position;
+  document.getElementById("pnl").innerText = data.pnl ? data.pnl + "%" : "-";
+  document.getElementById("explanation").innerText = data.explanation;
 
-      const data = await res.json();
+  const table = document.getElementById("historyTable");
+  table.innerHTML = "";
 
-      document.getElementById("btcPrice").innerText =
-        "$" + data.price.toLocaleString();
-
-      document.getElementById("signal").innerText =
-        data.signal + " (" + data.confidence + "%)";
-
-      document.getElementById("position").innerText = data.position;
-      document.getElementById("entry").innerText =
-        data.entryPrice ? "$" + data.entryPrice.toLocaleString() : "-";
-
-      document.getElementById("pnl").innerText =
-        data.pnl ? data.pnl + "%" : "-";
-
-      box.innerText = data.explanation;
-    } catch {
-      box.innerText = "Connection error.";
-    }
-  }
+  data.history.forEach(trade => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${trade.time}</td>
+      <td>${trade.action}</td>
+      <td>$${trade.price.toLocaleString()}</td>
+      <td>${trade.pnl ? trade.pnl + "%" : "-"}</td>
+    `;
+    table.appendChild(row);
+  });
+}
 </script>
 
 </body>
