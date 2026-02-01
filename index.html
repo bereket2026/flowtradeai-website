@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>FlowTradeAI Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
@@ -23,8 +23,8 @@
     }
 
     header h1 {
-      color: #60a5fa;
       font-size: 20px;
+      color: #60a5fa;
     }
 
     .container {
@@ -35,21 +35,21 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
     }
 
     .card {
       background: #111827;
-      border: 1px solid #1f2937;
       border-radius: 10px;
       padding: 20px;
+      border: 1px solid #1f2937;
     }
 
     .card h3 {
-      color: #93c5fd;
       font-size: 14px;
-      margin-bottom: 8px;
+      color: #93c5fd;
+      margin-bottom: 6px;
     }
 
     .stat {
@@ -58,7 +58,7 @@
     }
 
     button {
-      margin-top: 10px;
+      margin-top: 12px;
       background: #2563eb;
       border: none;
       color: white;
@@ -71,7 +71,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 12px;
       font-size: 13px;
     }
 
@@ -83,6 +83,12 @@
 
     th {
       color: #9ca3af;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #facc15;
     }
 
     footer {
@@ -105,7 +111,7 @@
   <div class="grid">
     <div class="card">
       <h3>BTC Price</h3>
-      <div id="price" class="stat">-</div>
+      <div id="price" class="stat">Waiting...</div>
     </div>
 
     <div class="card">
@@ -119,14 +125,14 @@
     </div>
 
     <div class="card">
-      <h3>PnL (%)</h3>
+      <h3>PnL</h3>
       <div id="pnl" class="stat">-</div>
     </div>
 
     <div class="card">
       <h3>Ask FlowTradeAI</h3>
       <button onclick="askAI()">Ask AI</button>
-      <div id="explanation" style="margin-top:10px;font-size:13px;"></div>
+      <div id="status" class="status">Click the button to start</div>
     </div>
   </div>
 
@@ -141,7 +147,7 @@
           <th>PnL %</th>
         </tr>
       </thead>
-      <tbody id="historyTable">
+      <tbody id="history">
         <tr><td colspan="4">No trades yet</td></tr>
       </tbody>
     </table>
@@ -150,35 +156,51 @@
 </div>
 
 <footer>
-  © 2026 FlowTradeAI • Demo / Paper Trading Only
+  © 2026 FlowTradeAI • Demo Only
 </footer>
 
 <script>
 async function askAI() {
-  const res = await fetch("https://flowtradeai-backend-v3.onrender.com/ai", {
-    method: "POST"
-  });
-  const data = await res.json();
+  document.getElementById("status").innerText = "Connecting to AI...";
 
-  document.getElementById("price").innerText = "$" + data.price.toLocaleString();
-  document.getElementById("signal").innerText = data.signal;
-  document.getElementById("position").innerText = data.position;
-  document.getElementById("pnl").innerText = data.pnl ? data.pnl + "%" : "-";
-  document.getElementById("explanation").innerText = data.explanation;
+  try {
+    const res = await fetch(
+      "https://flowtradeai-backend-v3.onrender.com/ai",
+      { method: "POST" }
+    );
 
-  const table = document.getElementById("historyTable");
-  table.innerHTML = "";
+    if (!res.ok) throw new Error("Backend error");
 
-  data.history.forEach(trade => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${trade.time}</td>
-      <td>${trade.action}</td>
-      <td>$${trade.price.toLocaleString()}</td>
-      <td>${trade.pnl ? trade.pnl + "%" : "-"}</td>
-    `;
-    table.appendChild(row);
-  });
+    const data = await res.json();
+
+    document.getElementById("price").innerText =
+      "$" + data.price.toLocaleString();
+
+    document.getElementById("signal").innerText = data.signal;
+    document.getElementById("position").innerText = data.position;
+    document.getElementById("pnl").innerText =
+      data.pnl ? data.pnl + "%" : "-";
+
+    document.getElementById("status").innerText = data.explanation;
+
+    const history = document.getElementById("history");
+    history.innerHTML = "";
+
+    data.history.forEach(t => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${t.time}</td>
+        <td>${t.action}</td>
+        <td>$${t.price.toLocaleString()}</td>
+        <td>${t.pnl ? t.pnl + "%" : "-"}</td>
+      `;
+      history.appendChild(row);
+    });
+
+  } catch (err) {
+    document.getElementById("status").innerText =
+      "⚠ Backend sleeping. Refresh page and wait 30 seconds.";
+  }
 }
 </script>
 
