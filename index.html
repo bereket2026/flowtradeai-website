@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: Arial, Helvetica, sans-serif;
       background: #0b1220;
@@ -117,8 +118,13 @@
     </div>
 
     <div class="card">
-      <h3>AI Signal Accuracy</h3>
-      <div class="stat">98%</div>
+      <h3>Bitcoin (BTC)</h3>
+      <div id="btcPrice" class="stat">Loading...</div>
+    </div>
+
+    <div class="card">
+      <h3>Ethereum (ETH)</h3>
+      <div id="ethPrice" class="stat">Loading...</div>
     </div>
 
     <div class="card">
@@ -154,6 +160,27 @@
       box.innerText = "Connection error. Please try again.";
     }
   }
+
+  async function loadPrices() {
+    try {
+      const res = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
+      );
+      const data = await res.json();
+
+      document.getElementById("btcPrice").innerText =
+        "$" + data.bitcoin.usd.toLocaleString();
+
+      document.getElementById("ethPrice").innerText =
+        "$" + data.ethereum.usd.toLocaleString();
+    } catch (e) {
+      document.getElementById("btcPrice").innerText = "Error";
+      document.getElementById("ethPrice").innerText = "Error";
+    }
+  }
+
+  loadPrices();
+  setInterval(loadPrices, 30000);
 </script>
 
 </body>
