@@ -1,17 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>FlowTradeAI</title>
+  <meta charset="UTF-8" />
+  <title>FlowTradeAI Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0b1220;
+      color: #e5e7eb;
+    }
+
+    header {
+      background: #111827;
+      padding: 18px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    header h1 {
+      font-size: 20px;
+      color: #60a5fa;
+    }
+
+    header span {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .container {
+      padding: 30px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #111827;
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #1f2937;
+    }
+
+    .card h3 {
+      font-size: 15px;
+      margin-bottom: 10px;
+      color: #93c5fd;
+    }
+
+    .stat {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .ai-box {
+      margin-top: 15px;
+      padding: 12px;
+      background: #020617;
+      border-radius: 6px;
+      font-size: 14px;
+      min-height: 50px;
+    }
+
+    button {
+      margin-top: 15px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
 </head>
 <body>
+
+<header>
   <h1>FlowTradeAI</h1>
-  <p id="answer">Click to ask AI</p>
-  <button onclick="askAI()">Ask AI</button>
+  <span>AI Trading Dashboard</span>
+</header>
 
-  <script>
-    async function askAI() {
-      document.getElementById("answer").innerText = "AI is thinking...";
+<div class="container">
+  <div class="grid">
 
+    <div class="card">
+      <h3>Portfolio Balance</h3>
+      <div class="stat">$12,480</div>
+    </div>
+
+    <div class="card">
+      <h3>Active Trades</h3>
+      <div class="stat">3</div>
+    </div>
+
+    <div class="card">
+      <h3>AI Signal Accuracy</h3>
+      <div class="stat">98%</div>
+    </div>
+
+    <div class="card">
+      <h3>Ask FlowTradeAI</h3>
+      <div id="aiAnswer" class="ai-box">
+        Click the button to get AI insight.
+      </div>
+      <button onclick="askAI()">Ask AI</button>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  © 2026 FlowTradeAI • Not financial advice
+</footer>
+
+<script>
+  async function askAI() {
+    const box = document.getElementById("aiAnswer");
+    box.innerText = "AI is analyzing the market...";
+
+    try {
       const res = await fetch("https://flowtradeai-backend-v3.onrender.com/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -19,8 +149,12 @@
       });
 
       const data = await res.json();
-      document.getElementById("answer").innerText = data.ai;
+      box.innerText = data.ai;
+    } catch (e) {
+      box.innerText = "Connection error. Please try again.";
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
