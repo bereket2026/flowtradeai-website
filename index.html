@@ -5,7 +5,6 @@
   <title>FlowTradeAI Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <!-- Lightweight Charts -->
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
   <style>
@@ -34,7 +33,7 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
     }
     .card {
@@ -46,12 +45,12 @@
     .card h3 {
       margin-top: 0;
       color: #93c5fd;
-      font-size: 16px;
+      font-size: 15px;
     }
     .big {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: bold;
-      margin-top: 10px;
+      margin-top: 8px;
     }
     button {
       margin-top: 15px;
@@ -65,8 +64,8 @@
       cursor: pointer;
     }
     .status {
-      margin-top: 10px;
-      font-size: 14px;
+      margin-top: 8px;
+      font-size: 13px;
       color: #9ca3af;
     }
     #chart {
@@ -93,19 +92,31 @@
     <div class="card">
       <h3>BTC Price</h3>
       <div id="price" class="big">--</div>
-      <div class="status">Live from Binance</div>
+      <div class="status">Live market price</div>
     </div>
 
     <div class="card">
       <h3>AI Signal</h3>
       <div id="signal" class="big">--</div>
-      <div class="status">Current recommendation</div>
+      <div class="status">BUY / SELL / HOLD</div>
     </div>
 
     <div class="card">
       <h3>Confidence</h3>
       <div id="confidence" class="big">--%</div>
       <div class="status">AI confidence</div>
+    </div>
+
+    <div class="card">
+      <h3>RSI</h3>
+      <div id="rsi" class="big">--</div>
+      <div class="status">Relative Strength Index</div>
+    </div>
+
+    <div class="card">
+      <h3>MACD</h3>
+      <div id="macd" class="big">--</div>
+      <div class="status">Trend momentum</div>
     </div>
   </div>
 
@@ -127,25 +138,29 @@
 </footer>
 
 <script>
-  // 🔴 CHANGE THIS TO YOUR REAL RENDER URL
+  // 🔴 PUT YOUR REAL RENDER URL HERE
   const BACKEND_URL = "https://YOUR-RENDER-URL.onrender.com";
 
-  // ===== Chart Setup =====
-  const chart = LightweightCharts.createChart(document.getElementById('chart'), {
-    layout: { background: { color: '#111827' }, textColor: '#e5e7eb' },
-    grid: { vertLines: { color: '#1f2937' }, horzLines: { color: '#1f2937' } },
-    timeScale: { timeVisible: true, secondsVisible: false }
-  });
+  const chart = LightweightCharts.createChart(
+    document.getElementById("chart"),
+    {
+      layout: { background: { color: "#111827" }, textColor: "#e5e7eb" },
+      grid: {
+        vertLines: { color: "#1f2937" },
+        horzLines: { color: "#1f2937" }
+      }
+    }
+  );
 
   const lineSeries = chart.addLineSeries({
-    color: '#4aa3ff',
+    color: "#4aa3ff",
     lineWidth: 2
   });
 
   let chartData = [];
 
   async function askAI() {
-    document.getElementById("message").innerText = "Loading AI response...";
+    document.getElementById("message").innerText = "Analyzing market...";
 
     try {
       const res = await fetch(BACKEND_URL + "/ai", {
@@ -158,15 +173,20 @@
       document.getElementById("price").innerText = "$" + data.price.toFixed(2);
       document.getElementById("signal").innerText = data.signal;
       document.getElementById("confidence").innerText = data.confidence + "%";
+      document.getElementById("rsi").innerText = data.rsi;
+      document.getElementById("macd").innerText = data.macd;
       document.getElementById("message").innerText = data.message;
 
-      const time = Math.floor(Date.now() / 1000);
-      chartData.push({ time, value: data.price });
+      chartData.push({
+        time: Math.floor(Date.now() / 1000),
+        value: data.price
+      });
+
       lineSeries.setData(chartData);
 
-    } catch (err) {
+    } catch (e) {
       document.getElementById("message").innerText =
-        "Backend sleeping. Refresh page and wait 30 seconds.";
+        "Backend sleeping. Refresh and wait 30 seconds.";
     }
   }
 </script>
