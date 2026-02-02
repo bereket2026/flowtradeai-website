@@ -12,7 +12,6 @@
       background: #0b1220;
       color: #e5e7eb;
     }
-
     header {
       background: #111827;
       padding: 18px 30px;
@@ -21,42 +20,38 @@
       align-items: center;
       border-bottom: 1px solid #1f2937;
     }
-
-    header h1 {
-      font-size: 20px;
-      color: #60a5fa;
-    }
+    header h1 { font-size: 20px; color: #60a5fa; }
 
     .container {
       padding: 30px;
       max-width: 1200px;
       margin: auto;
     }
-
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
     }
-
     .card {
       background: #111827;
       border-radius: 10px;
       padding: 20px;
       border: 1px solid #1f2937;
     }
-
     .card h3 {
       font-size: 14px;
       color: #93c5fd;
       margin-bottom: 6px;
     }
-
     .stat {
       font-size: 22px;
       font-weight: bold;
     }
-
+    .hint {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
     button {
       margin-top: 10px;
       background: #2563eb;
@@ -67,24 +62,18 @@
       cursor: pointer;
       font-weight: bold;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
       font-size: 13px;
     }
-
     th, td {
       padding: 8px;
       border-bottom: 1px solid #1f2937;
       text-align: left;
     }
-
-    th {
-      color: #9ca3af;
-    }
-
+    th { color: #9ca3af; }
     footer {
       text-align: center;
       padding: 20px;
@@ -114,6 +103,12 @@
     </div>
 
     <div class="card">
+      <h3>RSI (14)</h3>
+      <div id="rsi" class="stat">-</div>
+      <div id="rsiHint" class="hint">Waiting for data…</div>
+    </div>
+
+    <div class="card">
       <h3>Position</h3>
       <div id="position" class="stat">-</div>
     </div>
@@ -126,8 +121,7 @@
     <div class="card">
       <h3>Ask FlowTradeAI</h3>
       <button onclick="askAI()">Ask AI</button>
-      <button onclick="exportCSV()" style="margin-left:8px;">Export Trades (CSV)</button>
-      <div id="status" style="margin-top:8px;font-size:13px;"></div>
+      <div id="status" class="hint"></div>
     </div>
   </div>
 
@@ -155,36 +149,41 @@
 </footer>
 
 <script>
-let lastHistory = [];
-
 async function askAI() {
-  document.getElementById("status").innerText = "Connecting to AI...";
+  document.getElementById("status").innerText = "Connecting to AI…";
 
   try {
     const res = await fetch(
       "https://flowtradeai-backend-v3.onrender.com/ai",
       { method: "POST" }
     );
-
     const data = await res.json();
 
     document.getElementById("price").innerText =
       "$" + data.price.toLocaleString();
-    document.getElementById("signal").innerText = data.signal;
+    document.getElementById("signal").innerText =
+      data.signal + " (" + data.confidence + "%)";
     document.getElementById("position").innerText = data.position;
     document.getElementById("pnl").innerText =
       data.pnl ? data.pnl + "%" : "-";
+
+    // RSI display
+    if (data.rsi !== null && data.rsi !== undefined) {
+      document.getElementById("rsi").innerText = data.rsi;
+
+      let hint = "Neutral";
+      if (data.rsi < 30) hint = "Oversold (potential BUY)";
+      else if (data.rsi > 70) hint = "Overbought (potential SELL)";
+
+      document.getElementById("rsiHint").innerText = hint;
+    }
+
     document.getElementById("status").innerText = data.explanation;
 
     const history = document.getElementById("history");
     history.innerHTML = "";
-    lastHistory = data.history || [];
 
-    if (lastHistory.length === 0) {
-      history.innerHTML = "<tr><td colspan='4'>No trades yet</td></tr>";
-    }
-
-    lastHistory.forEach(t => {
+    (data.history || []).forEach(t => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${t.time}</td>
@@ -199,28 +198,6 @@ async function askAI() {
     document.getElementById("status").innerText =
       "Backend sleeping. Refresh page and wait 30 seconds.";
   }
-}
-
-function exportCSV() {
-  if (lastHistory.length === 0) {
-    alert("No trades to export yet.");
-    return;
-  }
-
-  let csv = "Time,Action,Price,PnL\n";
-  lastHistory.forEach(t => {
-    csv += `${t.time},${t.action},${t.price},${t.pnl || ""}\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "flowtradeai_trades.csv";
-  a.click();
-
-  URL.revokeObjectURL(url);
 }
 </script>
 
