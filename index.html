@@ -5,6 +5,9 @@
   <title>FlowTradeAI Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body {
       margin: 0;
@@ -20,8 +23,10 @@
       align-items: center;
       border-bottom: 1px solid #1f2937;
     }
-    header h1 { font-size: 20px; color: #60a5fa; }
-
+    header h1 {
+      font-size: 20px;
+      color: #60a5fa;
+    }
     .container {
       padding: 30px;
       max-width: 1200px;
@@ -53,7 +58,6 @@
       margin-top: 4px;
     }
     button {
-      margin-top: 10px;
       background: #2563eb;
       border: none;
       color: white;
@@ -61,6 +65,7 @@
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
+      margin-top: 10px;
     }
     table {
       width: 100%;
@@ -82,16 +87,18 @@
     }
   </style>
 </head>
+
 <body>
 
 <header>
   <h1>FlowTradeAI</h1>
-  <span>Paper Trading Dashboard</span>
+  <span>AI Trading Dashboard (Demo)</span>
 </header>
 
 <div class="container">
 
   <div class="grid">
+
     <div class="card">
       <h3>BTC Price</h3>
       <div id="price" class="stat">-</div>
@@ -109,6 +116,12 @@
     </div>
 
     <div class="card">
+      <h3>MACD</h3>
+      <div id="macd" class="stat">-</div>
+      <div class="hint">Trend momentum</div>
+    </div>
+
+    <div class="card">
       <h3>Position</h3>
       <div id="position" class="stat">-</div>
     </div>
@@ -123,6 +136,12 @@
       <button onclick="askAI()">Ask AI</button>
       <div id="status" class="hint"></div>
     </div>
+
+  </div>
+
+  <div class="card" style="margin-top:30px;">
+    <h3>BTC Price Chart</h3>
+    <canvas id="priceChart" height="120"></canvas>
   </div>
 
   <div class="card" style="margin-top:30px;">
@@ -149,6 +168,29 @@
 </footer>
 
 <script>
+let chart;
+let priceData = [];
+let labels = [];
+
+function initChart() {
+  const ctx = document.getElementById("priceChart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: priceData,
+        borderWidth: 2,
+        tension: 0.3
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { x: { display: false } }
+    }
+  });
+}
+
 async function askAI() {
   document.getElementById("status").innerText = "Connecting to AI…";
 
@@ -159,40 +201,42 @@ async function askAI() {
     );
     const data = await res.json();
 
-    document.getElementById("price").innerText =
-      "$" + data.price.toLocaleString();
-    document.getElementById("signal").innerText =
-      data.signal + " (" + data.confidence + "%)";
+    document.getElementById("price").innerText = "$" + data.price.toLocaleString();
+    document.getElementById("signal").innerText = data.signal + " (" + data.confidence + "%)";
     document.getElementById("position").innerText = data.position;
-    document.getElementById("pnl").innerText =
-      data.pnl ? data.pnl + "%" : "-";
+    document.getElementById("pnl").innerText = data.pnl ? data.pnl + "%" : "-";
+    document.getElementById("macd").innerText = data.macd ?? "-";
 
-    // RSI display
-    if (data.rsi !== null && data.rsi !== undefined) {
+    if (data.rsi !== null) {
       document.getElementById("rsi").innerText = data.rsi;
-
-      let hint = "Neutral";
-      if (data.rsi < 30) hint = "Oversold (potential BUY)";
-      else if (data.rsi > 70) hint = "Overbought (potential SELL)";
-
-      document.getElementById("rsiHint").innerText = hint;
+      document.getElementById("rsiHint").innerText =
+        data.rsi < 30 ? "Oversold" :
+        data.rsi > 70 ? "Overbought" :
+        "Neutral";
     }
 
-    document.getElementById("status").innerText = data.explanation;
+    if (!chart) initChart();
+    labels.push(new Date().toLocaleTimeString());
+    priceData.push(data.price);
+    if (priceData.length > 30) {
+      priceData.shift();
+      labels.shift();
+    }
+    chart.update();
 
     const history = document.getElementById("history");
     history.innerHTML = "";
-
     (data.history || []).forEach(t => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${t.time}</td>
-        <td>${t.action}</td>
-        <td>$${t.price.toLocaleString()}</td>
-        <td>${t.pnl ? t.pnl + "%" : "-"}</td>
-      `;
-      history.appendChild(row);
+      history.innerHTML += `
+        <tr>
+          <td>${t.time}</td>
+          <td>${t.action}</td>
+          <td>$${t.price}</td>
+          <td>${t.pnl || "-"}</td>
+        </tr>`;
     });
+
+    document.getElementById("status").innerText = data.explanation;
 
   } catch {
     document.getElementById("status").innerText =
