@@ -58,7 +58,7 @@
     }
 
     button {
-      margin-top: 12px;
+      margin-top: 10px;
       background: #2563eb;
       border: none;
       color: white;
@@ -85,12 +85,6 @@
       color: #9ca3af;
     }
 
-    .status {
-      margin-top: 10px;
-      font-size: 13px;
-      color: #facc15;
-    }
-
     footer {
       text-align: center;
       padding: 20px;
@@ -111,7 +105,7 @@
   <div class="grid">
     <div class="card">
       <h3>BTC Price</h3>
-      <div id="price" class="stat">Waiting...</div>
+      <div id="price" class="stat">-</div>
     </div>
 
     <div class="card">
@@ -132,7 +126,8 @@
     <div class="card">
       <h3>Ask FlowTradeAI</h3>
       <button onclick="askAI()">Ask AI</button>
-      <div id="status" class="status">Click the button to start</div>
+      <button onclick="exportCSV()" style="margin-left:8px;">Export Trades (CSV)</button>
+      <div id="status" style="margin-top:8px;font-size:13px;"></div>
     </div>
   </div>
 
@@ -160,6 +155,8 @@
 </footer>
 
 <script>
+let lastHistory = [];
+
 async function askAI() {
   document.getElementById("status").innerText = "Connecting to AI...";
 
@@ -169,24 +166,25 @@ async function askAI() {
       { method: "POST" }
     );
 
-    if (!res.ok) throw new Error("Backend error");
-
     const data = await res.json();
 
     document.getElementById("price").innerText =
       "$" + data.price.toLocaleString();
-
     document.getElementById("signal").innerText = data.signal;
     document.getElementById("position").innerText = data.position;
     document.getElementById("pnl").innerText =
       data.pnl ? data.pnl + "%" : "-";
-
     document.getElementById("status").innerText = data.explanation;
 
     const history = document.getElementById("history");
     history.innerHTML = "";
+    lastHistory = data.history || [];
 
-    data.history.forEach(t => {
+    if (lastHistory.length === 0) {
+      history.innerHTML = "<tr><td colspan='4'>No trades yet</td></tr>";
+    }
+
+    lastHistory.forEach(t => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${t.time}</td>
@@ -197,10 +195,32 @@ async function askAI() {
       history.appendChild(row);
     });
 
-  } catch (err) {
+  } catch {
     document.getElementById("status").innerText =
-      "⚠ Backend sleeping. Refresh page and wait 30 seconds.";
+      "Backend sleeping. Refresh page and wait 30 seconds.";
   }
+}
+
+function exportCSV() {
+  if (lastHistory.length === 0) {
+    alert("No trades to export yet.");
+    return;
+  }
+
+  let csv = "Time,Action,Price,PnL\n";
+  lastHistory.forEach(t => {
+    csv += `${t.time},${t.action},${t.price},${t.pnl || ""}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "flowtradeai_trades.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
 }
 </script>
 
