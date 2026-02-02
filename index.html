@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>FlowTradeAI – AI Trading Intelligence</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>FlowTradeAI Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <style>
     body {
@@ -13,108 +13,138 @@
       color: #e5e7eb;
     }
     header {
-      padding: 20px 40px;
+      padding: 20px 30px;
+      background: #020617;
+      border-bottom: 1px solid #1f2937;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #1f2937;
     }
     header h1 {
       color: #60a5fa;
       font-size: 22px;
     }
-    .hero {
-      padding: 100px 20px;
-      text-align: center;
-      max-width: 800px;
+    .container {
+      padding: 30px;
+      max-width: 1100px;
       margin: auto;
     }
-    .hero h2 {
-      font-size: 36px;
-      margin-bottom: 20px;
-    }
-    .hero p {
-      font-size: 18px;
-      color: #9ca3af;
-      line-height: 1.6;
-    }
-    .btn {
-      display: inline-block;
-      margin-top: 30px;
-      background: #2563eb;
-      color: white;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-weight: bold;
-      text-decoration: none;
-    }
-    .features {
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
-      max-width: 1000px;
-      margin: 80px auto;
-      padding: 0 20px;
     }
-    .feature {
+    .card {
       background: #111827;
       padding: 20px;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid #1f2937;
     }
-    .feature h3 {
+    .card h3 {
+      margin-top: 0;
       color: #93c5fd;
-      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    .big {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #4aa3ff, #1f7cff);
+      color: black;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #9ca3af;
     }
     footer {
       text-align: center;
-      padding: 30px;
-      font-size: 12px;
+      padding: 20px;
       color: #6b7280;
+      font-size: 13px;
     }
   </style>
 </head>
-
 <body>
 
 <header>
   <h1>FlowTradeAI</h1>
-  <span>AI Trading Intelligence</span>
+  <div>AI Trading Dashboard</div>
 </header>
 
-<section class="hero">
-  <h2>Trade Smarter with AI</h2>
-  <p>
-    FlowTradeAI uses artificial intelligence, RSI, and MACD indicators
-    to analyze the crypto market and generate intelligent trading signals.
-    This platform is designed for learning, testing, and strategy validation.
-  </p>
+<div class="container">
 
-  <a class="btn" href="dashboard.html">Open Dashboard</a>
-</section>
+  <div class="grid">
+    <div class="card">
+      <h3>BTC Price</h3>
+      <div id="price" class="big">--</div>
+      <div class="status">Live from Binance</div>
+    </div>
 
-<section class="features">
-  <div class="feature">
-    <h3>AI Signals</h3>
-    <p>BUY / SELL / HOLD decisions based on market data.</p>
+    <div class="card">
+      <h3>AI Signal</h3>
+      <div id="signal" class="big">--</div>
+      <div class="status">Current recommendation</div>
+    </div>
+
+    <div class="card">
+      <h3>Confidence</h3>
+      <div id="confidence" class="big">--%</div>
+      <div class="status">AI confidence level</div>
+    </div>
   </div>
-  <div class="feature">
-    <h3>RSI & MACD</h3>
-    <p>Professional technical indicators used by real traders.</p>
+
+  <div class="card" style="margin-top:30px;">
+    <h3>Ask FlowTradeAI</h3>
+    <button onclick="askAI()">Get AI Analysis</button>
+    <div id="message" class="status"></div>
   </div>
-  <div class="feature">
-    <h3>Paper Trading</h3>
-    <p>Test strategies safely without risking real money.</p>
-  </div>
-  <div class="feature">
-    <h3>Live Dashboard</h3>
-    <p>Real-time price chart, indicators, and trade history.</p>
-  </div>
-</section>
+
+</div>
 
 <footer>
-  © 2026 FlowTradeAI • Demo Platform
+  © 2026 FlowTradeAI — All rights reserved
 </footer>
+
+<script>
+  const BACKEND_URL = "https://flowtradeai-backend-v3.onrender.com";
+
+
+  async function askAI() {
+    document.getElementById("message").innerText = "Loading AI response...";
+
+    try {
+      const res = await fetch(BACKEND_URL + "/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      });
+
+      const data = await res.json();
+
+      document.getElementById("price").innerText = "$" + data.price.toFixed(2);
+      document.getElementById("signal").innerText = data.signal;
+      document.getElementById("confidence").innerText = data.confidence + "%";
+      document.getElementById("message").innerText = data.message;
+
+    } catch (err) {
+      document.getElementById("message").innerText =
+        "Backend sleeping. Refresh page and wait 30 seconds.";
+    }
+  }
+</script>
 
 </body>
 </html>
