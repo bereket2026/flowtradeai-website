@@ -5,6 +5,9 @@
   <title>FlowTradeAI Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
+  <!-- Lightweight Charts -->
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
   <style>
     body {
       margin: 0;
@@ -26,7 +29,7 @@
     }
     .container {
       padding: 30px;
-      max-width: 1100px;
+      max-width: 1200px;
       margin: auto;
     }
     .grid {
@@ -61,13 +64,13 @@
       font-weight: bold;
       cursor: pointer;
     }
-    button:hover {
-      opacity: 0.9;
-    }
     .status {
       margin-top: 10px;
       font-size: 14px;
       color: #9ca3af;
+    }
+    #chart {
+      height: 350px;
     }
     footer {
       text-align: center;
@@ -102,8 +105,13 @@
     <div class="card">
       <h3>Confidence</h3>
       <div id="confidence" class="big">--%</div>
-      <div class="status">AI confidence level</div>
+      <div class="status">AI confidence</div>
     </div>
+  </div>
+
+  <div class="card" style="margin-top:30px;">
+    <h3>BTC Price Chart</h3>
+    <div id="chart"></div>
   </div>
 
   <div class="card" style="margin-top:30px;">
@@ -119,8 +127,22 @@
 </footer>
 
 <script>
-  const BACKEND_URL = "https://flowtradeai-backend-v3.onrender.com";
+  // 🔴 CHANGE THIS TO YOUR REAL RENDER URL
+  const BACKEND_URL = "https://YOUR-RENDER-URL.onrender.com";
 
+  // ===== Chart Setup =====
+  const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+    layout: { background: { color: '#111827' }, textColor: '#e5e7eb' },
+    grid: { vertLines: { color: '#1f2937' }, horzLines: { color: '#1f2937' } },
+    timeScale: { timeVisible: true, secondsVisible: false }
+  });
+
+  const lineSeries = chart.addLineSeries({
+    color: '#4aa3ff',
+    lineWidth: 2
+  });
+
+  let chartData = [];
 
   async function askAI() {
     document.getElementById("message").innerText = "Loading AI response...";
@@ -128,8 +150,7 @@
     try {
       const res = await fetch(BACKEND_URL + "/ai", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        headers: { "Content-Type": "application/json" }
       });
 
       const data = await res.json();
@@ -138,6 +159,10 @@
       document.getElementById("signal").innerText = data.signal;
       document.getElementById("confidence").innerText = data.confidence + "%";
       document.getElementById("message").innerText = data.message;
+
+      const time = Math.floor(Date.now() / 1000);
+      chartData.push({ time, value: data.price });
+      lineSeries.setData(chartData);
 
     } catch (err) {
       document.getElementById("message").innerText =
