@@ -8,197 +8,154 @@
   <style>
     body {
       margin: 0;
+      background: #020617;
       font-family: Arial, sans-serif;
-      background: #0f172a;
       color: #e5e7eb;
     }
 
     header {
       background: #020617;
-      padding: 20px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
+      border-bottom: 1px solid #1e293b;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
       color: #38bdf8;
+      font-size: 20px;
+    }
+
+    button {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
     }
 
     .container {
-      max-width: 1100px;
+      padding: 30px;
+      max-width: 1000px;
       margin: auto;
-      padding: 20px;
     }
 
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
+      margin-top: 20px;
     }
 
     .card {
-      background: #020617;
-      border-radius: 12px;
+      background: #0f172a;
       padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 0 20px rgba(56,189,248,0.1);
     }
 
-    .big {
-      font-size: 26px;
-      font-weight: bold;
+    .card h3 {
+      color: #38bdf8;
+      margin-bottom: 10px;
     }
 
-    .signal-buy { color: #22c55e; }
-    .signal-sell { color: #ef4444; }
-    .signal-hold { color: #facc15; }
-
-    button {
-      margin-top: 20px;
-      padding: 15px;
-      width: 100%;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      background: #38bdf8;
-      color: #020617;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    canvas {
+    .status {
       margin-top: 30px;
       background: #020617;
+      padding: 20px;
       border-radius: 12px;
-      width: 100%;
-      height: 300px;
+      border: 1px solid #1e293b;
     }
 
-    table {
-      width: 100%;
-      margin-top: 30px;
-      border-collapse: collapse;
+    .ok {
+      color: #22c55e;
     }
 
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #1e293b;
-      text-align: center;
-    }
-
-    th {
-      color: #38bdf8;
-    }
-
-    footer {
-      margin-top: 40px;
-      text-align: center;
-      opacity: 0.6;
+    .err {
+      color: #ef4444;
     }
   </style>
 </head>
 
 <body>
-<header>🚀 FlowTradeAI – AI Trading Platform</header>
+
+<header>
+  <h1>FlowTradeAI Dashboard</h1>
+  <button onclick="logout()">Logout</button>
+</header>
 
 <div class="container">
+  <h2>Welcome 👋</h2>
+  <p>This is your protected AI trading dashboard.</p>
 
   <div class="cards">
     <div class="card">
-      <h3>BTC Price</h3>
-      <div id="price" class="big">--</div>
+      <h3>Account</h3>
+      <p>Status: <span class="ok">Active</span></p>
+      <p>Mode: Demo</p>
     </div>
 
     <div class="card">
       <h3>AI Signal</h3>
-      <div id="signal" class="big">--</div>
+      <p id="signal">Loading...</p>
     </div>
 
     <div class="card">
-      <h3>Confidence</h3>
-      <div id="confidence" class="big">--%</div>
-    </div>
-
-    <div class="card">
-      <h3>Balance</h3>
-      <div id="balance" class="big">$10,000</div>
+      <h3>Auto Trader</h3>
+      <p>Status: <span class="ok">Running</span></p>
     </div>
   </div>
 
-  <button onclick="runAI()">Run AI Now</button>
-
-  <canvas id="chart"></canvas>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Time</th>
-        <th>Signal</th>
-        <th>Price</th>
-      </tr>
-    </thead>
-    <tbody id="history"></tbody>
-  </table>
-
+  <div class="status">
+    <h3>Backend Status</h3>
+    <p id="backend">Checking backend...</p>
+  </div>
 </div>
 
-<footer>© 2026 FlowTradeAI</footer>
-
 <script>
-  const BACKEND_URL = "https://flowtradeai-backend-v3.onrender.com";
-  let balance = 10000;
-  let prices = [];
+/* ================= AUTH PROTECTION ================= */
+const token = localStorage.getItem("token");
 
-  const canvas = document.getElementById("chart");
-  const ctx = canvas.getContext("2d");
+if (!token) {
+  window.location.href = "login.html";
+}
 
-  function drawChart() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "#38bdf8";
-    ctx.beginPath();
+/* ================= LOGOUT ================= */
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+}
 
-    prices.forEach((p, i) => {
-      const x = (i / prices.length) * canvas.width;
-      const y = canvas.height - (p - Math.min(...prices)) * 2;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
+/* ================= BACKEND CHECK ================= */
+async function checkBackend() {
+  const el = document.getElementById("backend");
 
-    ctx.stroke();
-  }
-
-  async function runAI() {
-    try {
-      const res = await fetch(BACKEND_URL + "/ai", { method: "POST" });
-      const data = await res.json();
-
-      document.getElementById("price").innerText = "$" + data.price;
-      document.getElementById("confidence").innerText = data.confidence + "%";
-
-      const signalEl = document.getElementById("signal");
-      signalEl.innerText = data.signal;
-      signalEl.className = "big " +
-        (data.signal === "BUY" ? "signal-buy" :
-         data.signal === "SELL" ? "signal-sell" : "signal-hold");
-
-      prices.push(Number(data.price));
-      if (prices.length > 30) prices.shift();
-      drawChart();
-
-      if (data.signal === "BUY") balance -= 100;
-      if (data.signal === "SELL") balance += 120;
-      document.getElementById("balance").innerText = "$" + balance.toFixed(2);
-
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${new Date().toLocaleTimeString()}</td>
-        <td>${data.signal}</td>
-        <td>$${data.price}</td>
-      `;
-      document.getElementById("history").prepend(row);
-
-    } catch {
-      alert("Backend sleeping — refresh and wait 30s");
+  try {
+    const res = await fetch("https://flowtradeai-backend-v3.onrender.com/");
+    if (res.ok) {
+      el.innerHTML = "<span class='ok'>Backend is running</span>";
+    } else {
+      el.innerHTML = "<span class='err'>Backend error</span>";
     }
+  } catch (e) {
+    el.innerHTML = "<span class='err'>Backend offline / sleeping</span>";
   }
+}
 
-  setInterval(runAI, 60000);
+/* ================= AI SIGNAL (DEMO) ================= */
+function loadSignal() {
+  const signals = ["BUY", "SELL", "HOLD"];
+  const s = signals[Math.floor(Math.random() * signals.length)];
+  document.getElementById("signal").textContent = s;
+}
+
+/* ================= INIT ================= */
+checkBackend();
+loadSignal();
+setInterval(loadSignal, 5000);
 </script>
 
 </body>
