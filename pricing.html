@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>FlowTradeAI – Pricing</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>FlowTradeAI – AI Trading Engine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
@@ -15,137 +15,184 @@
 
     header {
       background: #020617;
-      padding: 20px;
-      text-align: center;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      color: #38bdf8;
       font-size: 22px;
+      margin: 0;
+    }
+
+    nav a {
+      color: #e5e7eb;
+      text-decoration: none;
+      margin-left: 20px;
       font-weight: bold;
+    }
+
+    nav a:hover {
       color: #38bdf8;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      padding: 40px 20px;
-    }
-
-    .plans {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 25px;
-    }
-
-    .plan {
-      background: #020617;
-      border-radius: 14px;
-      padding: 30px;
+    .hero {
+      padding: 80px 20px;
       text-align: center;
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+      background: linear-gradient(180deg, #020617, #0f172a);
     }
 
-    .plan h2 {
+    .hero h2 {
+      font-size: 42px;
+      margin-bottom: 20px;
       color: #38bdf8;
-      margin-bottom: 10px;
     }
 
-    .price {
-      font-size: 32px;
-      font-weight: bold;
-      margin: 20px 0;
+    .hero p {
+      font-size: 18px;
+      max-width: 700px;
+      margin: auto;
+      opacity: 0.9;
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    ul li {
-      padding: 10px 0;
-      border-bottom: 1px solid #1e293b;
-    }
-
-    button {
-      margin-top: 25px;
-      padding: 14px;
-      width: 100%;
+    .hero button {
+      margin-top: 40px;
+      padding: 16px 32px;
+      font-size: 18px;
       border: none;
-      border-radius: 10px;
-      font-size: 16px;
+      border-radius: 12px;
       background: #38bdf8;
       color: #020617;
       font-weight: bold;
       cursor: pointer;
     }
 
-    .disabled {
-      background: #334155;
-      cursor: not-allowed;
+    .hero button:hover {
+      opacity: 0.9;
+    }
+
+    .features {
+      max-width: 1100px;
+      margin: auto;
+      padding: 60px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 30px;
+    }
+
+    .feature {
+      background: #020617;
+      border-radius: 14px;
+      padding: 30px;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.08);
+    }
+
+    .feature h3 {
+      color: #38bdf8;
+      margin-top: 0;
+    }
+
+    .cta {
+      background: #020617;
+      padding: 70px 20px;
+      text-align: center;
+    }
+
+    .cta h2 {
+      font-size: 32px;
+      color: #38bdf8;
+    }
+
+    .cta button {
+      margin-top: 30px;
+      padding: 16px 32px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      background: #22c55e;
+      color: #020617;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     footer {
-      margin-top: 50px;
       text-align: center;
-      opacity: 0.6;
+      padding: 30px;
       font-size: 14px;
+      opacity: 0.6;
     }
   </style>
 </head>
 
 <body>
-<header>💎 FlowTradeAI – Pricing Plans</header>
 
-<div class="container">
-  <div class="plans">
+<header>
+  <h1>FlowTradeAI</h1>
+  <nav>
+    <a href="landing.html">Home</a>
+    <a href="index.html">Dashboard</a>
+    <a href="pricing.html">Pricing</a>
+  </nav>
+</header>
 
-    <div class="plan">
-      <h2>Free</h2>
-      <div class="price">$0</div>
-      <ul>
-        <li>AI Signals (Manual)</li>
-        <li>Demo Balance</li>
-        <li>Basic Dashboard</li>
-        <li>❌ Auto Trading</li>
-        <li>❌ Priority Support</li>
-      </ul>
-      <button class="disabled">Current Plan</button>
-    </div>
+<section class="hero">
+  <h2>AI-Powered Crypto Trading</h2>
+  <p>
+    FlowTradeAI uses artificial intelligence to analyze the market,
+    generate smart trading signals, and simulate auto trading —
+    all in one powerful dashboard.
+  </p>
+  <button onclick="location.href='index.html'">
+    Launch Dashboard
+  </button>
+</section>
 
-    <div class="plan">
-      <h2>Pro</h2>
-      <div class="price">$29 / month</div>
-      <ul>
-        <li>AI Auto Trading</li>
-        <li>Live Charts</li>
-        <li>Trade History</li>
-        <li>Email Alerts</li>
-        <li>Priority Support</li>
-      </ul>
-      <button onclick="upgrade()">Upgrade</button>
-    </div>
-
-    <div class="plan">
-      <h2>Elite</h2>
-      <div class="price">$99 / month</div>
-      <ul>
-        <li>Advanced AI Models</li>
-        <li>Unlimited Trades</li>
-        <li>Risk Management AI</li>
-        <li>Private Signals</li>
-        <li>1-on-1 Support</li>
-      </ul>
-      <button onclick="upgrade()">Upgrade</button>
-    </div>
-
+<section class="features">
+  <div class="feature">
+    <h3>🤖 AI Signals</h3>
+    <p>
+      Advanced AI logic generates BUY, SELL, or HOLD signals
+      with confidence scoring.
+    </p>
   </div>
-</div>
+
+  <div class="feature">
+    <h3>📈 Live Charts</h3>
+    <p>
+      Real-time price visualization with automated updates
+      every 60 seconds.
+    </p>
+  </div>
+
+  <div class="feature">
+    <h3>💰 Auto Trading Demo</h3>
+    <p>
+      Simulated trading engine with balance tracking
+      and trade history.
+    </p>
+  </div>
+
+  <div class="feature">
+    <h3>🔐 Secure & Scalable</h3>
+    <p>
+      Backend hosted on Render with clean API endpoints
+      and scalable architecture.
+    </p>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Start Trading Smarter Today</h2>
+  <button onclick="location.href='pricing.html'">
+    View Pricing Plans
+  </button>
+</section>
 
 <footer>
   © 2026 FlowTradeAI — AI Trading Engine
 </footer>
 
-<script>
-  function upgrade() {
-    alert("🚀 Upgrade system coming soon!\nThis is a demo platform.");
-  }
-</script>
 </body>
 </html>
