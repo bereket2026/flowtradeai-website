@@ -57,15 +57,18 @@
       color: #9ca3af;
       margin-top: 4px;
     }
+    select, button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      margin-top: 8px;
+    }
     button {
       background: #2563eb;
-      border: none;
       color: white;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
       font-weight: bold;
-      margin-top: 10px;
+      cursor: pointer;
     }
     table {
       width: 100%;
@@ -100,6 +103,16 @@
 <div class="container">
 
   <div class="grid">
+
+    <div class="card">
+      <h3>Strategy</h3>
+      <select id="strategy">
+        <option value="scalp">Scalp (Fast)</option>
+        <option value="swing" selected>Swing (Balanced)</option>
+        <option value="long">Long-term</option>
+      </select>
+      <div class="hint">AI behavior control</div>
+    </div>
 
     <div class="card">
       <h3>BTC Price</h3>
@@ -195,19 +208,24 @@ function initChart() {
 
 function startAutoRefresh() {
   if (autoInterval) return;
-  autoInterval = setInterval(() => {
-    askAI();
-  }, 30000);
+  autoInterval = setInterval(askAI, 30000);
 }
 
 async function askAI() {
   document.getElementById("status").innerText = "Requesting AI…";
 
+  const strategy = document.getElementById("strategy").value;
+
   try {
     const res = await fetch(
       "https://flowtradeai-backend-v3.onrender.com/ai",
-      { method: "POST" }
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ strategy })
+      }
     );
+
     const data = await res.json();
 
     document.getElementById("backendStatus").innerText = "Backend: ONLINE";
@@ -230,8 +248,8 @@ async function askAI() {
     labels.push(new Date().toLocaleTimeString());
     priceData.push(data.price);
     if (priceData.length > 30) {
-      priceData.shift();
       labels.shift();
+      priceData.shift();
     }
     chart.update();
 
@@ -247,7 +265,8 @@ async function askAI() {
         </tr>`;
     });
 
-    document.getElementById("status").innerText = data.explanation;
+    document.getElementById("status").innerText =
+      "Strategy: " + strategy.toUpperCase() + " • " + data.explanation;
 
   } catch {
     document.getElementById("backendStatus").innerText = "Backend: SLEEPING";
