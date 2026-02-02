@@ -24,7 +24,7 @@
 
     .container {
       padding: 20px;
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
     }
 
@@ -49,20 +49,11 @@
     .big {
       font-size: 26px;
       font-weight: bold;
-      margin-top: 10px;
     }
 
-    .signal-buy {
-      color: #22c55e;
-    }
-
-    .signal-sell {
-      color: #ef4444;
-    }
-
-    .signal-hold {
-      color: #facc15;
-    }
+    .signal-buy { color: #22c55e; }
+    .signal-sell { color: #ef4444; }
+    .signal-hold { color: #facc15; }
 
     button {
       margin-top: 20px;
@@ -77,8 +68,20 @@
       font-weight: bold;
     }
 
-    button:hover {
-      opacity: 0.9;
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    th {
+      color: #38bdf8;
     }
 
     footer {
@@ -91,75 +94,96 @@
 </head>
 
 <body>
-  <header>🚀 FlowTradeAI – AI Trading Dashboard</header>
+<header>🚀 FlowTradeAI – Auto Trading Dashboard</header>
 
-  <div class="container">
-    <div class="cards">
-      <div class="card">
-        <h3>BTC Price</h3>
-        <div id="price" class="big">--</div>
-      </div>
+<div class="container">
 
-      <div class="card">
-        <h3>AI Signal</h3>
-        <div id="signal" class="big">--</div>
-      </div>
-
-      <div class="card">
-        <h3>Confidence</h3>
-        <div id="confidence" class="big">--%</div>
-      </div>
-
-      <div class="card">
-        <h3>Status</h3>
-        <div id="status" class="big">Waiting</div>
-      </div>
+  <div class="cards">
+    <div class="card">
+      <h3>BTC Price</h3>
+      <div id="price" class="big">--</div>
     </div>
 
-    <button onclick="runAI()">Run AI Analysis</button>
+    <div class="card">
+      <h3>AI Signal</h3>
+      <div id="signal" class="big">--</div>
+    </div>
+
+    <div class="card">
+      <h3>Confidence</h3>
+      <div id="confidence" class="big">--%</div>
+    </div>
+
+    <div class="card">
+      <h3>Balance (Demo)</h3>
+      <div id="balance" class="big">$10,000</div>
+    </div>
   </div>
 
-  <footer>
-    © 2026 FlowTradeAI — Demo Auto Trading Engine
-  </footer>
+  <button onclick="runAI()">Run AI Now</button>
 
-  <script>
-    const BACKEND_URL = "https://flowtradeai-backend-v3.onrender.com";
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Signal</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody id="history"></tbody>
+  </table>
+</div>
 
-    async function runAI() {
-      document.getElementById("status").innerText = "Analyzing...";
+<footer>
+  © 2026 FlowTradeAI — Auto Trading Simulation
+</footer>
 
-      try {
-        const res = await fetch(BACKEND_URL + "/ai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
+<script>
+  const BACKEND_URL = "https://flowtradeai-backend-v3.onrender.com";
 
-        const data = await res.json();
+  let balance = 10000;
 
-        document.getElementById("price").innerText =
-          "$" + data.price;
+  async function runAI() {
+    try {
+      const res = await fetch(BACKEND_URL + "/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
 
-        const signalEl = document.getElementById("signal");
-        signalEl.innerText = data.signal;
+      const data = await res.json();
 
-        signalEl.className = "big " +
-          (data.signal === "BUY"
-            ? "signal-buy"
-            : data.signal === "SELL"
-            ? "signal-sell"
-            : "signal-hold");
+      document.getElementById("price").innerText = "$" + data.price;
+      document.getElementById("confidence").innerText = data.confidence + "%";
 
-        document.getElementById("confidence").innerText =
-          data.confidence + "%";
+      const signalEl = document.getElementById("signal");
+      signalEl.innerText = data.signal;
+      signalEl.className = "big " +
+        (data.signal === "BUY" ? "signal-buy" :
+         data.signal === "SELL" ? "signal-sell" : "signal-hold");
 
-        document.getElementById("status").innerText =
-          "AI Ready";
-      } catch (err) {
-        document.getElementById("status").innerText =
-          "Backend sleeping… refresh & wait 30s";
-      }
+      // simulate balance
+      if (data.signal === "BUY") balance -= 100;
+      if (data.signal === "SELL") balance += 120;
+
+      document.getElementById("balance").innerText =
+        "$" + balance.toFixed(2);
+
+      // history
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${new Date().toLocaleTimeString()}</td>
+        <td>${data.signal}</td>
+        <td>$${data.price}</td>
+      `;
+      document.getElementById("history").prepend(row);
+
+    } catch {
+      alert("Backend sleeping — refresh & wait 30 seconds");
     }
-  </script>
+  }
+
+  // AUTO RUN EVERY 60 SECONDS
+  setInterval(runAI, 60000);
+</script>
 </body>
 </html>
