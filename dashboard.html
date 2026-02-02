@@ -92,7 +92,9 @@
 
 <header>
   <h1>FlowTradeAI</h1>
-  <span>AI Trading Dashboard (Demo)</span>
+  <span id="backendStatus" style="font-size:13px;color:#9ca3af;">
+    Backend: Checking…
+  </span>
 </header>
 
 <div class="container">
@@ -112,13 +114,12 @@
     <div class="card">
       <h3>RSI (14)</h3>
       <div id="rsi" class="stat">-</div>
-      <div id="rsiHint" class="hint">Waiting for data…</div>
+      <div id="rsiHint" class="hint">Waiting…</div>
     </div>
 
     <div class="card">
       <h3>MACD</h3>
       <div id="macd" class="stat">-</div>
-      <div class="hint">Trend momentum</div>
     </div>
 
     <div class="card">
@@ -164,13 +165,14 @@
 </div>
 
 <footer>
-  © 2026 FlowTradeAI • Demo Only
+  © 2026 FlowTradeAI • Demo Platform
 </footer>
 
 <script>
 let chart;
 let priceData = [];
 let labels = [];
+let autoInterval = null;
 
 function initChart() {
   const ctx = document.getElementById("priceChart").getContext("2d");
@@ -191,8 +193,15 @@ function initChart() {
   });
 }
 
+function startAutoRefresh() {
+  if (autoInterval) return;
+  autoInterval = setInterval(() => {
+    askAI();
+  }, 30000);
+}
+
 async function askAI() {
-  document.getElementById("status").innerText = "Connecting to AI…";
+  document.getElementById("status").innerText = "Requesting AI…";
 
   try {
     const res = await fetch(
@@ -200,6 +209,9 @@ async function askAI() {
       { method: "POST" }
     );
     const data = await res.json();
+
+    document.getElementById("backendStatus").innerText = "Backend: ONLINE";
+    document.getElementById("backendStatus").style.color = "#22c55e";
 
     document.getElementById("price").innerText = "$" + data.price.toLocaleString();
     document.getElementById("signal").innerText = data.signal + " (" + data.confidence + "%)";
@@ -211,8 +223,7 @@ async function askAI() {
       document.getElementById("rsi").innerText = data.rsi;
       document.getElementById("rsiHint").innerText =
         data.rsi < 30 ? "Oversold" :
-        data.rsi > 70 ? "Overbought" :
-        "Neutral";
+        data.rsi > 70 ? "Overbought" : "Neutral";
     }
 
     if (!chart) initChart();
@@ -239,10 +250,18 @@ async function askAI() {
     document.getElementById("status").innerText = data.explanation;
 
   } catch {
+    document.getElementById("backendStatus").innerText = "Backend: SLEEPING";
+    document.getElementById("backendStatus").style.color = "#facc15";
     document.getElementById("status").innerText =
-      "Backend sleeping. Refresh page and wait 30 seconds.";
+      "Backend sleeping. Waiting to wake up…";
   }
 }
+
+// auto start
+setTimeout(() => {
+  askAI();
+  startAutoRefresh();
+}, 2000);
 </script>
 
 </body>
