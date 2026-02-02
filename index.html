@@ -25,6 +25,7 @@
     header h1 {
       color: #60a5fa;
       font-size: 22px;
+      margin: 0;
     }
     .container {
       padding: 30px;
@@ -43,7 +44,7 @@
       border: 1px solid #1f2937;
     }
     .card h3 {
-      margin-top: 0;
+      margin: 0;
       color: #93c5fd;
       font-size: 15px;
     }
@@ -77,13 +78,27 @@
       color: #6b7280;
       font-size: 13px;
     }
+    .logout {
+      background:#ef4444;
+      padding:8px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
   </style>
 </head>
 <body>
 
+<script>
+  // 🔐 PROTECT PAGE
+  if (!localStorage.getItem("loggedIn")) {
+    location.href = "login.html";
+  }
+</script>
+
 <header>
   <h1>FlowTradeAI</h1>
-  <div>AI Trading Dashboard</div>
+  <div class="logout" onclick="logout()">Logout</div>
 </header>
 
 <div class="container">
@@ -138,7 +153,7 @@
 </footer>
 
 <script>
-  // 🔴 PUT YOUR REAL RENDER URL HERE
+  // 🔴 PUT YOUR REAL BACKEND URL HERE
   const BACKEND_URL = "https://YOUR-RENDER-URL.onrender.com";
 
   const chart = LightweightCharts.createChart(
@@ -153,7 +168,6 @@
   );
 
   const lineSeries = chart.addLineSeries({
-    color: "#4aa3ff",
     lineWidth: 2
   });
 
@@ -170,7 +184,7 @@
 
       const data = await res.json();
 
-      document.getElementById("price").innerText = "$" + data.price.toFixed(2);
+      document.getElementById("price").innerText = "$" + Number(data.price).toFixed(2);
       document.getElementById("signal").innerText = data.signal;
       document.getElementById("confidence").innerText = data.confidence + "%";
       document.getElementById("rsi").innerText = data.rsi;
@@ -182,12 +196,18 @@
         value: data.price
       });
 
+      if (chartData.length > 60) chartData.shift();
       lineSeries.setData(chartData);
 
     } catch (e) {
       document.getElementById("message").innerText =
         "Backend sleeping. Refresh and wait 30 seconds.";
     }
+  }
+
+  function logout() {
+    localStorage.removeItem("loggedIn");
+    location.href = "login.html";
   }
 </script>
 
