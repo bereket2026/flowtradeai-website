@@ -23,6 +23,12 @@
       color: #60a5fa;
       font-size: 22px;
     }
+    header a {
+      color: #93c5fd;
+      text-decoration: none;
+      margin-left: 15px;
+      font-size: 14px;
+    }
     .container {
       max-width: 1100px;
       margin: auto;
@@ -33,7 +39,7 @@
       font-size: 36px;
       margin-bottom: 10px;
     }
-    p.subtitle {
+    .subtitle {
       color: #9ca3af;
       font-size: 18px;
       margin-bottom: 50px;
@@ -72,3 +78,100 @@
     ul li {
       padding: 8px 0;
       border-bottom: 1px solid #1f2937;
+      font-size: 14px;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      background: #2563eb;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .btn.secondary {
+      background: #374151;
+    }
+    footer {
+      text-align: center;
+      padding: 30px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>FlowTradeAI</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+  </nav>
+</header>
+
+<div class="container">
+  <h2>Simple, Transparent Pricing</h2>
+  <p class="subtitle">
+    Choose a plan that fits your trading needs.
+    Upgrade anytime.
+  </p>
+
+  <div class="plans">
+
+    <!-- FREE -->
+    <div class="plan">
+      <h3>Free</h3>
+      <div class="price">$0 <span>/ month</span></div>
+      <ul>
+        <li>✔ AI Signals (Limited)</li>
+        <li>✔ BTC Price Chart</li>
+        <li>✔ RSI & MACD</li>
+        <li>✔ Paper Trading</li>
+        <li>✖ Auto-refresh</li>
+        <li>✖ Advanced strategies</li>
+      </ul>
+      <a class="btn secondary" href="dashboard.html">Start Free</a>
+    </div>
+
+    <!-- PRO -->
+    <div class="plan" style="border:2px solid #2563eb;">
+      <h3>Pro</h3>
+      <div class="price">$19 <span>/ month</span></div>
+      <ul>
+        <li>✔ Unlimited AI Signals</li>
+        <li>✔ Auto-refresh</li>
+        <li>✔ RSI, MACD, AI Confidence</li>
+        <li>✔ Full Trade History</li>
+        <li>✔ Strategy Selector</li>
+        <li>✔ Priority Backend</li>
+      </ul>
+      <a class="btn" href="#">Upgrade (Coming Soon)</a>
+    </div>
+
+    <!-- ENTERPRISE -->
+    <div class="plan">
+      <h3>Enterprise</h3>
+      <div class="price">Custom</div>
+      <ul>
+        <li>✔ Custom AI Models</li>
+        <li>✔ API Access</li>
+        <li>✔ Dedicated Backend</li>
+        <li>✔ Team Accounts</li>
+        <li>✔ Priority Support</li>
+        <li>✔ White-label</li>
+      </ul>
+      <a class="btn secondary" href="#">Contact Us</a>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  © 2026 FlowTradeAI • Pricing for demo purposes
+</footer>
+
+</body>
+</html>
