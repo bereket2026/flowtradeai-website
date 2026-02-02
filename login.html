@@ -2,121 +2,102 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login | FlowTradeAI</title>
+  <title>FlowTradeAI Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
       margin: 0;
-      background: #020617;
-      font-family: Arial, sans-serif;
-      color: #e5e7eb;
+      height: 100vh;
+      background: linear-gradient(135deg, #020617, #0f172a);
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      font-family: Arial, sans-serif;
+      color: #e5e7eb;
     }
 
-    .box {
-      background: #0f172a;
+    .login-box {
+      background: #020617;
       padding: 40px;
-      border-radius: 14px;
       width: 320px;
-      box-shadow: 0 0 20px rgba(56,189,248,0.15);
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(56,189,248,0.15);
+      text-align: center;
     }
 
-    h2 {
-      text-align: center;
+    h1 {
       color: #38bdf8;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-bottom: 25px;
     }
 
     input {
       width: 100%;
       padding: 12px;
-      margin-top: 15px;
+      margin-bottom: 15px;
       border-radius: 8px;
       border: none;
       outline: none;
+      font-size: 14px;
     }
 
     button {
       width: 100%;
-      margin-top: 25px;
       padding: 12px;
-      background: #38bdf8;
-      color: #020617;
       border: none;
       border-radius: 8px;
+      background: #38bdf8;
+      color: #020617;
       font-weight: bold;
       cursor: pointer;
+      font-size: 16px;
     }
 
-    button:hover {
-      opacity: 0.9;
-    }
-
-    p {
-      text-align: center;
+    .note {
       margin-top: 20px;
-      font-size: 14px;
-    }
-
-    a {
-      color: #38bdf8;
-      text-decoration: none;
-    }
-
-    .msg {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 14px;
+      font-size: 12px;
+      opacity: 0.6;
     }
   </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h2>Login</h2>
+<div class="login-box">
+  <h1>FlowTradeAI</h1>
+  <p>Login to your AI trading dashboard</p>
 
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
 
   <button onclick="login()">Login</button>
 
-  <div class="msg" id="msg"></div>
-
-  <p>
-    No account? <a href="register.html">Register</a>
-  </p>
+  <div class="note">
+    Demo login – any email & password works
+  </div>
 </div>
 
 <script>
-async function login() {
+function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const msg = document.getElementById("msg");
-  msg.textContent = "Logging in...";
-
-  try {
-    const res = await fetch("https://flowtradeai-backend-v3.onrender.com/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem("token", data.token);
-      window.location.href = "index.html";
-    } else {
-      msg.textContent = data.error || "Login failed";
-    }
-  } catch (e) {
-    msg.textContent = "Backend offline or error";
+  if (!email || !password) {
+    alert("Please enter email and password");
+    return;
   }
+
+  // DEMO TOKEN
+  localStorage.setItem("token", "flowtradeai-demo-token");
+
+  // Redirect to dashboard
+  window.location.href = "index.html";
 }
 </script>
 
