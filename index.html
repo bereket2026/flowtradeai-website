@@ -1,213 +1,89 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>FlowTradeAI Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-
+  <meta charset="UTF-8">
+  <title>FlowTradeAI</title>
   <style>
     body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #0b1220;
-      color: #e5e7eb;
-    }
-    header {
-      padding: 20px 30px;
-      background: #020617;
-      border-bottom: 1px solid #1f2937;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    header h1 {
-      color: #60a5fa;
-      font-size: 22px;
-      margin: 0;
-    }
-    .container {
-      padding: 30px;
-      max-width: 1200px;
-      margin: auto;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
+      background:#0b1220;
+      color:white;
+      font-family:Arial;
+      margin:0;
+      padding:20px;
     }
     .card {
-      background: #111827;
-      padding: 20px;
-      border-radius: 12px;
-      border: 1px solid #1f2937;
-    }
-    .card h3 {
-      margin: 0;
-      color: #93c5fd;
-      font-size: 15px;
-    }
-    .big {
-      font-size: 26px;
-      font-weight: bold;
-      margin-top: 8px;
+      background:#111827;
+      padding:20px;
+      border-radius:10px;
+      margin-bottom:20px;
     }
     button {
-      margin-top: 15px;
-      width: 100%;
-      padding: 12px;
-      background: linear-gradient(135deg, #4aa3ff, #1f7cff);
-      color: black;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .status {
-      margin-top: 8px;
-      font-size: 13px;
-      color: #9ca3af;
-    }
-    #chart {
-      height: 350px;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: #6b7280;
-      font-size: 13px;
-    }
-    .logout {
-      background:#ef4444;
-      padding:8px 14px;
+      padding:12px;
+      background:#22c55e;
+      border:none;
       border-radius:8px;
-      cursor:pointer;
       font-weight:bold;
+      cursor:pointer;
+    }
+    table {
+      width:100%;
+      border-collapse:collapse;
+    }
+    td, th {
+      padding:8px;
+      border-bottom:1px solid #1f2937;
     }
   </style>
 </head>
+
 <body>
 
-<script>
-  // 🔐 PROTECT PAGE
-  if (!localStorage.getItem("loggedIn")) {
-    location.href = "login.html";
-  }
-</script>
+<h2>FlowTradeAI Dashboard</h2>
 
-<header>
-  <h1>FlowTradeAI</h1>
-  <div class="logout" onclick="logout()">Logout</div>
-</header>
-
-<div class="container">
-
-  <div class="grid">
-    <div class="card">
-      <h3>BTC Price</h3>
-      <div id="price" class="big">--</div>
-      <div class="status">Live market price</div>
-    </div>
-
-    <div class="card">
-      <h3>AI Signal</h3>
-      <div id="signal" class="big">--</div>
-      <div class="status">BUY / SELL / HOLD</div>
-    </div>
-
-    <div class="card">
-      <h3>Confidence</h3>
-      <div id="confidence" class="big">--%</div>
-      <div class="status">AI confidence</div>
-    </div>
-
-    <div class="card">
-      <h3>RSI</h3>
-      <div id="rsi" class="big">--</div>
-      <div class="status">Relative Strength Index</div>
-    </div>
-
-    <div class="card">
-      <h3>MACD</h3>
-      <div id="macd" class="big">--</div>
-      <div class="status">Trend momentum</div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:30px;">
-    <h3>BTC Price Chart</h3>
-    <div id="chart"></div>
-  </div>
-
-  <div class="card" style="margin-top:30px;">
-    <h3>Ask FlowTradeAI</h3>
-    <button onclick="askAI()">Get AI Analysis</button>
-    <div id="message" class="status"></div>
-  </div>
-
+<div class="card">
+  <b>Balance:</b> $<span id="balance">---</span><br><br>
+  <b>BTC Price:</b> $<span id="price">---</span><br>
+  <b>Signal:</b> <span id="signal">---</span><br>
+  <b>Confidence:</b> <span id="confidence">---</span>%<br>
+  <b>RSI:</b> <span id="rsi">---</span><br>
+  <b>MACD:</b> <span id="macd">---</span><br><br>
+  <button onclick="runAI()">Run AI Auto-Trade</button>
+  <p id="msg"></p>
 </div>
 
-<footer>
-  © 2026 FlowTradeAI — All rights reserved
-</footer>
+<div class="card">
+  <h3>Trade History</h3>
+  <table>
+    <thead>
+      <tr><th>Time</th><th>Action</th><th>Price</th></tr>
+    </thead>
+    <tbody id="history"></tbody>
+  </table>
+</div>
 
 <script>
-  // 🔴 PUT YOUR REAL BACKEND URL HERE
-  const BACKEND_URL = "https://YOUR-RENDER-URL.onrender.com";
+  const BACKEND = "http://localhost:3000";
 
-  const chart = LightweightCharts.createChart(
-    document.getElementById("chart"),
-    {
-      layout: { background: { color: "#111827" }, textColor: "#e5e7eb" },
-      grid: {
-        vertLines: { color: "#1f2937" },
-        horzLines: { color: "#1f2937" }
-      }
-    }
-  );
+  async function runAI() {
+    const res = await fetch(BACKEND + "/ai", { method:"POST" });
+    const data = await res.json();
 
-  const lineSeries = chart.addLineSeries({
-    lineWidth: 2
-  });
+    balance.innerText = data.balance;
+    price.innerText = data.price.toFixed(2);
+    signal.innerText = data.signal;
+    confidence.innerText = data.confidence;
+    rsi.innerText = data.rsi;
+    macd.innerText = data.macd;
+    msg.innerText = data.message;
 
-  let chartData = [];
-
-  async function askAI() {
-    document.getElementById("message").innerText = "Analyzing market...";
-
-    try {
-      const res = await fetch(BACKEND_URL + "/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
-
-      const data = await res.json();
-
-      document.getElementById("price").innerText = "$" + Number(data.price).toFixed(2);
-      document.getElementById("signal").innerText = data.signal;
-      document.getElementById("confidence").innerText = data.confidence + "%";
-      document.getElementById("rsi").innerText = data.rsi;
-      document.getElementById("macd").innerText = data.macd;
-      document.getElementById("message").innerText = data.message;
-
-      chartData.push({
-        time: Math.floor(Date.now() / 1000),
-        value: data.price
-      });
-
-      if (chartData.length > 60) chartData.shift();
-      lineSeries.setData(chartData);
-
-    } catch (e) {
-      document.getElementById("message").innerText =
-        "Backend sleeping. Refresh and wait 30 seconds.";
-    }
-  }
-
-  function logout() {
-    localStorage.removeItem("loggedIn");
-    location.href = "login.html";
+    history.innerHTML = "";
+    data.history.forEach(t => {
+      history.innerHTML += `<tr>
+        <td>${t.time}</td>
+        <td>${t.action}</td>
+        <td>$${t.price}</td>
+      </tr>`;
+    });
   }
 </script>
 
