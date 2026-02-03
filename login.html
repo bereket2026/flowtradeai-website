@@ -17,7 +17,7 @@
       color: #e5e7eb;
     }
 
-    .login-box {
+    .box {
       background: #020617;
       padding: 40px;
       width: 320px;
@@ -31,19 +31,12 @@
       margin-bottom: 10px;
     }
 
-    p {
-      font-size: 14px;
-      opacity: 0.7;
-      margin-bottom: 25px;
-    }
-
     input {
       width: 100%;
       padding: 12px;
-      margin-bottom: 15px;
+      margin: 12px 0;
       border-radius: 8px;
       border: none;
-      outline: none;
       font-size: 14px;
     }
 
@@ -55,32 +48,27 @@
       background: #38bdf8;
       color: #020617;
       font-weight: bold;
-      cursor: pointer;
       font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
     }
 
-    .note {
-      margin-top: 20px;
+    p {
       font-size: 12px;
       opacity: 0.6;
+      margin-top: 20px;
     }
   </style>
 </head>
 
 <body>
 
-<div class="login-box">
+<div class="box">
   <h1>FlowTradeAI</h1>
-  <p>Login to your AI trading dashboard</p>
-
-  <input type="email" id="email" placeholder="Email" />
-  <input type="password" id="password" placeholder="Password" />
-
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
   <button onclick="login()">Login</button>
-
-  <div class="note">
-    Demo login – any email & password works
-  </div>
+  <p>Demo login — any email & password</p>
 </div>
 
 <script>
@@ -89,15 +77,12 @@ function login() {
   const password = document.getElementById("password").value;
 
   if (!email || !password) {
-    alert("Please enter email and password");
+    alert("Enter email and password");
     return;
   }
 
-  // DEMO TOKEN
-  localStorage.setItem("token", "flowtradeai-demo-token");
-
-  // Redirect to dashboard
-  window.location.href = "index.html";
+  localStorage.setItem("token", "flowtradeai-token");
+  window.location.href = "dashboard.html";
 }
 </script>
 
