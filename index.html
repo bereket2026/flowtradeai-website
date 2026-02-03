@@ -2,21 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>FlowTradeAI Dashboard</title>
+  <title>FlowTradeAI – Automated AI Trading</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
       margin: 0;
-      background: #020617;
       font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #020617, #0f172a);
       color: #e5e7eb;
     }
 
     header {
-      background: #020617;
-      border-bottom: 1px solid #1e293b;
-      padding: 15px 30px;
+      padding: 25px 40px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -24,58 +22,89 @@
 
     header h1 {
       color: #38bdf8;
-      font-size: 20px;
+      font-size: 22px;
     }
 
-    button {
-      background: #ef4444;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
+    nav a {
+      color: #e5e7eb;
+      margin-left: 20px;
+      text-decoration: none;
       font-weight: bold;
     }
 
-    .container {
-      padding: 30px;
-      max-width: 1000px;
-      margin: auto;
+    .hero {
+      text-align: center;
+      padding: 120px 20px;
     }
 
-    .cards {
+    .hero h2 {
+      font-size: 42px;
+      color: #38bdf8;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      max-width: 600px;
+      margin: auto;
+      font-size: 18px;
+      opacity: 0.85;
+    }
+
+    .buttons {
+      margin-top: 40px;
+    }
+
+    .buttons a {
+      display: inline-block;
+      padding: 14px 26px;
+      margin: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: #38bdf8;
+      color: #020617;
+    }
+
+    .btn-secondary {
+      border: 2px solid #38bdf8;
+      color: #38bdf8;
+    }
+
+    .features {
+      background: #020617;
+      padding: 80px 20px;
+    }
+
+    .features h3 {
+      text-align: center;
+      font-size: 30px;
+      margin-bottom: 40px;
+      color: #38bdf8;
+    }
+
+    .grid {
+      max-width: 1000px;
+      margin: auto;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+      gap: 25px;
     }
 
     .card {
       background: #0f172a;
-      padding: 20px;
+      padding: 25px;
       border-radius: 14px;
       box-shadow: 0 0 20px rgba(56,189,248,0.1);
     }
 
-    .card h3 {
-      color: #38bdf8;
-      margin-bottom: 10px;
-    }
-
-    .status {
-      margin-top: 30px;
-      background: #020617;
-      padding: 20px;
-      border-radius: 12px;
-      border: 1px solid #1e293b;
-    }
-
-    .ok {
-      color: #22c55e;
-    }
-
-    .err {
-      color: #ef4444;
+    footer {
+      text-align: center;
+      padding: 30px;
+      font-size: 14px;
+      opacity: 0.6;
     }
   </style>
 </head>
@@ -83,80 +112,55 @@
 <body>
 
 <header>
-  <h1>FlowTradeAI Dashboard</h1>
-  <button onclick="logout()">Logout</button>
+  <h1>FlowTradeAI</h1>
+  <nav>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html">Login</a>
+  </nav>
 </header>
 
-<div class="container">
-  <h2>Welcome 👋</h2>
-  <p>This is your protected AI trading dashboard.</p>
+<section class="hero">
+  <h2>AI-Powered Crypto Trading</h2>
+  <p>
+    FlowTradeAI is a fully automated AI trading engine that analyzes markets,
+    generates signals, and executes trades — 24/7.
+  </p>
 
-  <div class="cards">
+  <div class="buttons">
+    <a href="login.html" class="btn-primary">Get Started</a>
+    <a href="pricing.html" class="btn-secondary">View Pricing</a>
+  </div>
+</section>
+
+<section class="features">
+  <h3>Why FlowTradeAI?</h3>
+
+  <div class="grid">
     <div class="card">
-      <h3>Account</h3>
-      <p>Status: <span class="ok">Active</span></p>
-      <p>Mode: Demo</p>
+      <h4>🤖 AI Signals</h4>
+      <p>Advanced algorithms analyze market trends in real time.</p>
     </div>
 
     <div class="card">
-      <h3>AI Signal</h3>
-      <p id="signal">Loading...</p>
+      <h4>⚡ Auto Trading</h4>
+      <p>Execute trades automatically without manual work.</p>
     </div>
 
     <div class="card">
-      <h3>Auto Trader</h3>
-      <p>Status: <span class="ok">Running</span></p>
+      <h4>🔒 Secure</h4>
+      <p>Your dashboard is protected with secure login.</p>
+    </div>
+
+    <div class="card">
+      <h4>📊 Live Monitoring</h4>
+      <p>Track performance and signals in your dashboard.</p>
     </div>
   </div>
+</section>
 
-  <div class="status">
-    <h3>Backend Status</h3>
-    <p id="backend">Checking backend...</p>
-  </div>
-</div>
-
-<script>
-/* ================= AUTH PROTECTION ================= */
-const token = localStorage.getItem("token");
-
-if (!token) {
-  window.location.href = "login.html";
-}
-
-/* ================= LOGOUT ================= */
-function logout() {
-  localStorage.removeItem("token");
-  window.location.href = "login.html";
-}
-
-/* ================= BACKEND CHECK ================= */
-async function checkBackend() {
-  const el = document.getElementById("backend");
-
-  try {
-    const res = await fetch("https://flowtradeai-backend-v3.onrender.com/");
-    if (res.ok) {
-      el.innerHTML = "<span class='ok'>Backend is running</span>";
-    } else {
-      el.innerHTML = "<span class='err'>Backend error</span>";
-    }
-  } catch (e) {
-    el.innerHTML = "<span class='err'>Backend offline / sleeping</span>";
-  }
-}
-
-/* ================= AI SIGNAL (DEMO) ================= */
-function loadSignal() {
-  const signals = ["BUY", "SELL", "HOLD"];
-  const s = signals[Math.floor(Math.random() * signals.length)];
-  document.getElementById("signal").textContent = s;
-}
-
-/* ================= INIT ================= */
-checkBackend();
-loadSignal();
-setInterval(loadSignal, 5000);
-</script>
+<footer>
+  © 2026 FlowTradeAI — Automated AI Trading Platform
+</footer>
 
 </body>
 </html>
