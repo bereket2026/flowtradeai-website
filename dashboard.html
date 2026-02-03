@@ -42,6 +42,17 @@
       margin: auto;
     }
 
+    .badge {
+      display: inline-block;
+      background: #38bdf8;
+      color: #020617;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -66,20 +77,29 @@
     }
 
     .locked {
-      opacity: 0.4;
+      opacity: 0.35;
       filter: blur(1px);
     }
 
-    .badge {
-      display: inline-block;
-      background: #38bdf8;
-      color: #020617;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 10px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 14px;
     }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #1e293b;
+      text-align: left;
+    }
+
+    th {
+      color: #38bdf8;
+    }
+
+    .buy { color: #22c55e; }
+    .sell { color: #ef4444; }
 
     .ok { color: #22c55e; }
     .err { color: #ef4444; }
@@ -116,15 +136,31 @@
 
     <div class="card" id="autoTradeCard">
       <h3>Auto Trading</h3>
-      <p>AI executes trades automatically</p>
       <p class="ok">ENABLED</p>
     </div>
 
-    <div class="card" id="backendCard">
+    <div class="card">
       <h3>Backend Status</h3>
       <p id="backend">Checking...</p>
     </div>
 
+  </div>
+
+  <br><br>
+
+  <div class="card" id="tradeHistoryCard">
+    <h3>Trade History</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Pair</th>
+          <th>Type</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody id="trades"></tbody>
+    </table>
   </div>
 
 </div>
@@ -146,14 +182,15 @@ const plan = localStorage.getItem("plan") || "starter";
 document.getElementById("planBadge").innerText =
   "PLAN: " + plan.toUpperCase();
 
-/* ========= PLAN LOCKING ========= */
+/* ========= PLAN LOCKS ========= */
 if (plan === "starter") {
   document.getElementById("autoTradeCard").classList.add("locked");
-  document.getElementById("autoTradeCard").innerHTML =
-    "<h3>Auto Trading</h3><p>Upgrade to Pro to unlock</p>";
+  document.getElementById("tradeHistoryCard").classList.add("locked");
+  document.getElementById("tradeHistoryCard").innerHTML =
+    "<h3>Trade History</h3><p>Upgrade to Pro to unlock</p>";
 }
 
-/* ========= BACKEND CHECK ========= */
+/* ========= BACKEND ========= */
 async function checkBackend() {
   const el = document.getElementById("backend");
   try {
@@ -166,7 +203,7 @@ async function checkBackend() {
   }
 }
 
-/* ========= LIVE PRICES ========= */
+/* ========= PRICES ========= */
 async function loadPrices() {
   try {
     const btc = await fetch(
@@ -182,10 +219,7 @@ async function loadPrices() {
 
     document.getElementById("eth").innerText =
       "$" + Number(eth.price).toFixed(2);
-  } catch {
-    document.getElementById("btc").innerText = "Error";
-    document.getElementById("eth").innerText = "Error";
-  }
+  } catch {}
 }
 
 /* ========= AI SIGNAL ========= */
@@ -195,13 +229,38 @@ function loadSignal() {
     signals[Math.floor(Math.random() * signals.length)];
 }
 
+/* ========= TRADE HISTORY (DEMO) ========= */
+function addTrade() {
+  if (plan === "starter") return;
+
+  const pairs = ["BTC/USDT", "ETH/USDT"];
+  const types = ["BUY", "SELL"];
+  const pair = pairs[Math.floor(Math.random() * pairs.length)];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const price = (Math.random() * 50000 + 1000).toFixed(2);
+
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${new Date().toLocaleTimeString()}</td>
+    <td>${pair}</td>
+    <td class="${type === "BUY" ? "buy" : "sell"}">${type}</td>
+    <td>$${price}</td>
+  `;
+
+  const table = document.getElementById("trades");
+  table.prepend(row);
+  if (table.children.length > 5) table.removeChild(table.lastChild);
+}
+
 /* ========= INIT ========= */
 checkBackend();
 loadPrices();
 loadSignal();
+addTrade();
 
 setInterval(loadPrices, 5000);
 setInterval(loadSignal, 6000);
+setInterval(addTrade, 8000);
 </script>
 
 </body>
