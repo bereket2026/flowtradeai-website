@@ -42,12 +42,6 @@
       color: #38bdf8;
     }
 
-    .title p {
-      max-width: 600px;
-      margin: auto;
-      opacity: 0.85;
-    }
-
     .pricing {
       max-width: 1100px;
       margin: 60px auto;
@@ -76,15 +70,10 @@
       font-weight: bold;
     }
 
-    .price span {
-      font-size: 14px;
-      opacity: 0.6;
-    }
-
     ul {
       list-style: none;
       padding: 0;
-      margin: 30px 0;
+      margin: 25px 0;
     }
 
     ul li {
@@ -104,10 +93,10 @@
       color: #020617;
     }
 
-    footer {
+    .note {
       text-align: center;
-      padding: 30px;
-      font-size: 14px;
+      margin-top: 30px;
+      font-size: 13px;
       opacity: 0.6;
     }
   </style>
@@ -124,57 +113,58 @@
 </header>
 
 <div class="title">
-  <h2>Simple Pricing</h2>
-  <p>Choose a plan that fits your trading style. Cancel anytime.</p>
+  <h2>Choose Your Plan</h2>
 </div>
 
 <section class="pricing">
 
   <div class="card">
     <h3>Starter</h3>
-    <div class="price">$0 <span>/ month</span></div>
+    <div class="price">$0</div>
     <ul>
-      <li>✔ Demo trading</li>
+      <li>✔ Demo dashboard</li>
       <li>✔ AI signals</li>
-      <li>✔ Live prices</li>
       <li>✖ Auto trading</li>
     </ul>
-    <button onclick="goLogin()">Get Started</button>
+    <button onclick="selectPlan('starter')">Start Free</button>
   </div>
 
   <div class="card">
     <h3>Pro</h3>
-    <div class="price">$29 <span>/ month</span></div>
+    <div class="price">$29</div>
     <ul>
-      <li>✔ Everything in Starter</li>
+      <li>✔ Live prices</li>
       <li>✔ Auto trading</li>
-      <li>✔ Priority updates</li>
-      <li>✔ Email support</li>
+      <li>✔ Priority access</li>
     </ul>
-    <button onclick="goLogin()">Start Pro</button>
+    <button onclick="selectPlan('pro')">Buy Pro</button>
   </div>
 
   <div class="card">
     <h3>Elite</h3>
-    <div class="price">$79 <span>/ month</span></div>
+    <div class="price">$79</div>
     <ul>
       <li>✔ Unlimited trading</li>
       <li>✔ Advanced AI</li>
-      <li>✔ Risk controls</li>
       <li>✔ 24/7 support</li>
     </ul>
-    <button onclick="goLogin()">Go Elite</button>
+    <button onclick="selectPlan('elite')">Buy Elite</button>
   </div>
 
 </section>
 
-<footer>
-  © 2026 FlowTradeAI — Secure AI Trading Platform
-</footer>
+<div class="note">
+  Demo payment — no real money charged
+</div>
 
 <script>
-function goLogin() {
-  window.location.href = "login.html";
+function selectPlan(plan) {
+  // Save plan like a real payment success
+  localStorage.setItem("plan", plan);
+  localStorage.setItem("token", "flowtradeai-paid-user");
+
+  alert("Payment successful! Plan: " + plan.toUpperCase());
+  window.location.href = "dashboard.html";
 }
 </script>
 
