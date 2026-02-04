@@ -5,47 +5,25 @@
 <title>FlowTradeAI Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body {
-  margin:0;
-  background:#020617;
-  font-family:Arial;
-  color:#e5e7eb;
-}
-header {
-  padding:15px 30px;
-  border-bottom:1px solid #1e293b;
-  display:flex;
-  justify-content:space-between;
-}
-.card {
-  background:#0f172a;
-  padding:20px;
-  border-radius:14px;
-  margin:20px;
-}
-.price { font-size:24px; font-weight:bold; }
-.buy { color:#22c55e; }
-.sell { color:#ef4444; }
-.hold { color:#facc15; }
-.pos { color:#22c55e; }
-.neg { color:#ef4444; }
-button {
-  padding:10px 16px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-.on { background:#22c55e; }
-.off { background:#64748b; color:white; }
+body { margin:0; background:#020617; color:#e5e7eb; font-family:Arial }
+header { padding:15px 30px; border-bottom:1px solid #1e293b; display:flex; justify-content:space-between }
+.card { background:#0f172a; padding:20px; border-radius:14px; margin:20px }
+.price { font-size:22px; font-weight:bold }
+.buy { color:#22c55e }
+.sell { color:#ef4444 }
+.hold { color:#facc15 }
+.pos { color:#22c55e }
+.neg { color:#ef4444 }
+button { padding:10px 16px; border:none; border-radius:8px; cursor:pointer }
+.on { background:#22c55e }
+.off { background:#64748b; color:white }
 </style>
 </head>
 
 <body>
 
 <script>
-if (!localStorage.getItem("token")) {
-  window.location.href = "login.html";
-}
+if (!localStorage.getItem("token")) location.href="login.html";
 </script>
 
 <header>
@@ -63,6 +41,12 @@ if (!localStorage.getItem("token")) {
   <h3>AI Signal</h3>
   <div id="signal" class="price">...</div>
   <div id="confidence"></div>
+  <div id="price"></div>
+</div>
+
+<div class="card">
+  <h3>Position</h3>
+  <div id="position">None</div>
 </div>
 
 <div class="card">
@@ -73,41 +57,45 @@ if (!localStorage.getItem("token")) {
 <script>
 const API = "https://flowtradeai-backend-v3.onrender.com";
 
-function logout() {
+function logout(){
   localStorage.clear();
-  window.location.href = "login.html";
+  location.href="login.html";
 }
 
-async function loadAccount() {
-  const d = await (await fetch(API+"/account")).json();
-  balance.innerText = "$"+d.balance;
-  pnl.innerText = "PnL: "+d.total_pnl;
-  pnl.className = d.total_pnl >= 0 ? "pos" : "neg";
-}
-
-async function loadSignal() {
+async function loadAll(){
   const d = await (await fetch(API+"/ai-signal")).json();
+  const a = await (await fetch(API+"/account")).json();
+  const s = await (await fetch(API+"/auto-trade/status")).json();
+
+  balance.innerText = "$"+a.balance;
+  pnl.innerText = "PnL: "+a.total_pnl;
+  pnl.className = a.total_pnl >= 0 ? "pos" : "neg";
+
   signal.innerText = d.signal;
   signal.className = "price "+d.signal.toLowerCase();
   confidence.innerText = "Confidence "+d.confidence+"%";
+  price.innerText = "Price $"+d.price;
+
+  if(d.position){
+    position.innerHTML = `
+      Entry: $${d.position.entry}<br>
+      SL: $${d.position.sl.toFixed(2)}<br>
+      TP: $${d.position.tp.toFixed(2)}
+    `;
+  } else {
+    position.innerText = "None";
+  }
+
+  autoBtn.innerText = s.enabled ? "ON" : "OFF";
+  autoBtn.className = s.enabled ? "on" : "off";
 }
 
-async function toggleAutoTrade() {
-  await fetch(API+"/auto-trade/toggle", {method:"POST"});
-  refreshAutoTrade();
+async function toggleAutoTrade(){
+  await fetch(API+"/auto-trade/toggle",{method:"POST"});
 }
 
-async function refreshAutoTrade() {
-  const d = await (await fetch(API+"/auto-trade/status")).json();
-  autoBtn.innerText = d.enabled ? "ON" : "OFF";
-  autoBtn.className = d.enabled ? "on" : "off";
-}
-
-loadAccount();
-loadSignal();
-refreshAutoTrade();
-setInterval(loadAccount, 4000);
-setInterval(loadSignal, 5000);
+loadAll();
+setInterval(loadAll, 4000);
 </script>
 
 </body>
