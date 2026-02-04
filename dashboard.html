@@ -5,7 +5,7 @@
 <title>FlowTradeAI Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- TradingView Lightweight Charts -->
+<!-- Lightweight Charts -->
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
 <style>
@@ -170,4 +170,92 @@ async function loadSignals() {
         <tr>
           <td>${s.pair}</td>
           <td class="${cls}">${s.signal}</td>
-          <td>${s.confidence}%</
+          <td>${s.confidence}%</td>
+          <td>${s.price}</td>
+        </tr>
+      `;
+    });
+
+    drawMarkers(data);
+  } catch (e) {
+    console.log("Signal error", e);
+  }
+}
+
+/* ===== CHART ===== */
+const chart = LightweightCharts.createChart(
+  document.getElementById("chart"),
+  {
+    layout: {
+      background: { color: "#0f172a" },
+      textColor: "#e5e7eb"
+    },
+    grid: {
+      vertLines: { color: "#1e293b" },
+      horzLines: { color: "#1e293b" }
+    },
+    timeScale: { timeVisible: true }
+  }
+);
+
+const candleSeries = chart.addCandlestickSeries({
+  upColor: "#22c55e",
+  downColor: "#ef4444",
+  borderVisible: false,
+  wickUpColor: "#22c55e",
+  wickDownColor: "#ef4444"
+});
+
+/* ===== LOAD BINANCE CANDLES ===== */
+async function loadCandles() {
+  try {
+    const r = await fetch(
+      "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=100"
+    );
+    const data = await r.json();
+
+    const candles = data.map(c => ({
+      time: c[0] / 1000,
+      open: parseFloat(c[1]),
+      high: parseFloat(c[2]),
+      low: parseFloat(c[3]),
+      close: parseFloat(c[4])
+    }));
+
+    candleSeries.setData(candles);
+  } catch (e) {
+    console.log("Candle error", e);
+  }
+}
+
+/* ===== DRAW BUY/SELL MARKERS ===== */
+function drawMarkers(signals) {
+  const markers = signals.map(s => ({
+    time: Math.floor(Date.now() / 1000),
+    position: s.signal === "BUY" ? "belowBar" : "aboveBar",
+    color: s.signal === "BUY" ? "#22c55e" : "#ef4444",
+    shape: s.signal === "BUY" ? "arrowUp" : "arrowDown",
+    text: s.signal
+  }));
+
+  candleSeries.setMarkers(markers);
+}
+
+/* ===== LOGOUT ===== */
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+}
+
+/* ===== AUTO REFRESH ===== */
+loadAccount();
+loadSignals();
+loadCandles();
+
+setInterval(loadAccount, 15000);
+setInterval(loadSignals, 8000);
+setInterval(loadCandles, 30000);
+</script>
+
+</body>
+</html>
