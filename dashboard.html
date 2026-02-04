@@ -7,166 +7,182 @@
 
 <style>
 body {
-  margin:0;
-  background:#020617;
-  color:#e5e7eb;
-  font-family:Arial, sans-serif;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #020617;
+  color: #e5e7eb;
 }
 
 header {
-  padding:16px 24px;
-  border-bottom:1px solid #1e293b;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+  background: #020617;
+  padding: 20px;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  margin: 0;
+  color: #22c55e;
 }
 
 button {
-  padding:10px 14px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
+  background: #22c55e;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.primary { background:#38bdf8; }
-.secondary { background:#334155; color:white; }
-.on { background:#22c55e; }
-.off { background:#64748b; color:white; }
+button.secondary {
+  background: #334155;
+  color: #e5e7eb;
+}
 
 .container {
-  padding:20px;
+  padding: 20px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
 }
 
 .card {
-  background:#0f172a;
-  padding:20px;
-  border-radius:14px;
-  margin-bottom:20px;
+  background: #0f172a;
+  padding: 20px;
+  border-radius: 14px;
 }
 
-.price { font-size:22px; font-weight:bold; }
-.pos { color:#22c55e; }
-.neg { color:#ef4444; }
-.buy { color:#22c55e; }
-.hold { color:#facc15; }
+.card h3 {
+  margin-top: 0;
+  color: #93c5fd;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #1e293b;
+}
+
+th {
+  color: #94a3b8;
+}
+
+.buy { color: #22c55e; }
+.hold { color: #facc15; }
 </style>
 </head>
 
 <body>
 
-<script>
-/* ===== AUTH CHECK ===== */
-if (!localStorage.getItem("token")) {
-  window.location.href = "login.html";
-}
-</script>
-
 <header>
-  <h2>FlowTradeAI</h2>
+  <h1>FlowTradeAI</h1>
   <div>
-    <button class="secondary" onclick="goSettings()">API Keys</button>
-    <button class="secondary" onclick="logout()">Logout</button>
+    <button class="secondary" onclick="goStrategy()">Strategy</button>
+    <button onclick="logout()">Logout</button>
   </div>
 </header>
 
 <div class="container">
 
-  <div class="card">
-    <h3>Account</h3>
-    <div id="balance" class="price">...</div>
-    <div id="pnl"></div>
+  <!-- ACCOUNT INFO -->
+  <div class="cards">
+    <div class="card">
+      <h3>Balance</h3>
+      <h2 id="balance">$0</h2>
+    </div>
+    <div class="card">
+      <h3>Total PnL</h3>
+      <h2 id="pnl">$0</h2>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Markets</h3>
-    <div id="markets">Loading...</div>
-  </div>
+  <!-- AI SIGNALS -->
+  <h2 style="margin-top:30px">AI Signals</h2>
 
-  <div class="card">
-    <h3>Auto Trading</h3>
-    <button id="autoBtn" class="off" onclick="toggleAuto()">OFF</button>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Pair</th>
+        <th>Signal</th>
+        <th>Confidence</th>
+        <th>Price</th>
+        <th>Position</th>
+      </tr>
+    </thead>
+    <tbody id="signals"></tbody>
+  </table>
 
 </div>
 
 <script>
-/* ===== CONFIG ===== */
 const API = "https://flowtradeai-backend-v3.onrender.com";
 const TOKEN = localStorage.getItem("token");
 
-/* ===== HELPERS ===== */
-function logout() {
-  localStorage.clear();
+if (!TOKEN) {
   window.location.href = "login.html";
 }
 
-function goSettings() {
-  window.location.href = "settings.html";
-}
-
-async function apiGet(path) {
-  return fetch(API + path, {
-    headers: { "Authorization": TOKEN }
-  }).then(r => r.json());
-}
-
-async function apiPost(path) {
-  return fetch(API + path, {
-    method: "POST",
-    headers: { "Authorization": TOKEN }
-  }).then(r => r.json());
-}
-
-/* ===== LOAD DATA ===== */
+// ===== LOAD ACCOUNT =====
 async function loadAccount() {
-  const d = await apiGet("/account");
+  const r = await fetch(API + "/account", {
+    headers: { Authorization: TOKEN }
+  });
+  const d = await r.json();
+
   balance.innerText = "$" + d.balance;
-  pnl.innerText = "PnL: " + d.total_pnl;
-  pnl.className = d.total_pnl >= 0 ? "pos" : "neg";
+  pnl.innerText = "$" + d.total_pnl;
 }
 
-async function loadMarkets() {
-  const data = await apiGet("/ai-signal");
-  markets.innerHTML = "";
+// ===== LOAD AI SIGNALS =====
+async function loadSignals() {
+  const r = await fetch(API + "/ai-signal", {
+    headers: { Authorization: TOKEN }
+  });
+  const data = await r.json();
 
-  data.forEach(m => {
-    markets.innerHTML += `
-      <div style="margin-bottom:14px">
-        <b>${m.pair}</b><br>
-        <span class="${m.signal.toLowerCase()}">${m.signal}</span>
-        | ${m.confidence}% | $${m.price}<br>
-        ${m.position ? `
-          Entry: ${m.position.entry}<br>
-          SL: ${m.position.sl.toFixed(2)}<br>
-          TP: ${m.position.tp.toFixed(2)}
-        ` : "No open position"}
-      </div>
+  signals.innerHTML = "";
+
+  data.forEach(s => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${s.pair}</td>
+      <td class="${s.signal === 'BUY' ? 'buy' : 'hold'}">${s.signal}</td>
+      <td>${s.confidence}%</td>
+      <td>${s.price}</td>
+      <td>${s.position ? "OPEN" : "-"}</td>
     `;
+
+    signals.appendChild(tr);
   });
 }
 
-async function loadAutoTrade() {
-  const d = await apiGet("/auto-trade/status");
-  autoBtn.innerText = d.enabled ? "ON" : "OFF";
-  autoBtn.className = d.enabled ? "on" : "off";
+// ===== NAVIGATION =====
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
 }
 
-async function toggleAuto() {
-  await apiPost("/auto-trade/toggle");
-  loadAutoTrade();
+function goStrategy() {
+  window.location.href = "strategy.html";
 }
 
-/* ===== INIT ===== */
-async function init() {
-  await loadAccount();
-  await loadMarkets();
-  await loadAutoTrade();
-}
-
-init();
-setInterval(loadMarkets, 5000);
-setInterval(loadAccount, 6000);
+// ===== AUTO REFRESH =====
+loadAccount();
+loadSignals();
+setInterval(loadSignals, 8000);
+setInterval(loadAccount, 15000);
 </script>
 
 </body>
