@@ -1,102 +1,126 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>FlowTradeAI Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body { margin:0; background:#020617; color:#e5e7eb; font-family:Arial }
-header { padding:15px 30px; border-bottom:1px solid #1e293b; display:flex; justify-content:space-between }
-.card { background:#0f172a; padding:20px; border-radius:14px; margin:20px }
-.price { font-size:22px; font-weight:bold }
-.buy { color:#22c55e }
-.sell { color:#ef4444 }
-.hold { color:#facc15 }
-.pos { color:#22c55e }
-.neg { color:#ef4444 }
-button { padding:10px 16px; border:none; border-radius:8px; cursor:pointer }
-.on { background:#22c55e }
-.off { background:#64748b; color:white }
-</style>
-</head>
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import ccxt, os, random, time
 
-<body>
+app = Flask(__name__)
+CORS(app)
 
-<script>
-if (!localStorage.getItem("token")) location.href="login.html";
-</script>
+# ===== DEMO LOGIN =====
+USER = {"email": "admin@flowtradeai.com", "password": "123456"}
 
-<header>
-  <h2>FlowTradeAI</h2>
-  <button onclick="logout()">Logout</button>
-</header>
+# ===== BINANCE TESTNET =====
+exchange = ccxt.binance({
+    "apiKey": os.getenv("BINANCE_API_KEY"),
+    "secret": os.getenv("BINANCE_SECRET"),
+    "enableRateLimit": True,
+    "options": {"defaultType": "spot"}
+})
+exchange.set_sandbox_mode(True)
 
-<div class="card">
-  <h3>Account</h3>
-  <div id="balance" class="price">...</div>
-  <div id="pnl"></div>
-</div>
+AUTO_TRADE = False
+BALANCE = 10000.0
 
-<div class="card">
-  <h3>AI Signal</h3>
-  <div id="signal" class="price">...</div>
-  <div id="confidence"></div>
-  <div id="price"></div>
-</div>
+PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+POSITIONS = {}   # pair -> position
+TRADES = []
 
-<div class="card">
-  <h3>Position</h3>
-  <div id="position">None</div>
-</div>
+STOP_LOSS_PCT = 1.0
+TAKE_PROFIT_PCT = 2.0
 
-<div class="card">
-  <h3>Auto Trading</h3>
-  <button id="autoBtn" class="off" onclick="toggleAutoTrade()">OFF</button>
-</div>
+@app.route("/")
+def home():
+    return "FlowTradeAI backend running (Multi-Pair)"
 
-<script>
-const API = "https://flowtradeai-backend-v3.onrender.com";
+@app.route("/login", methods=["POST"])
+def login():
+    d = request.json
+    if d and d["email"] == USER["email"] and d["password"] == USER["password"]:
+        return jsonify(success=True, token="demo-token")
+    return jsonify(success=False), 401
 
-function logout(){
-  localStorage.clear();
-  location.href="login.html";
-}
+@app.route("/account")
+def account():
+    pnl = round(sum(t["pnl"] for t in TRADES), 2)
+    return jsonify(balance=round(BALANCE, 2), total_pnl=pnl)
 
-async function loadAll(){
-  const d = await (await fetch(API+"/ai-signal")).json();
-  const a = await (await fetch(API+"/account")).json();
-  const s = await (await fetch(API+"/auto-trade/status")).json();
+@app.route("/ai-signal")
+def ai_signal():
+    global BALANCE
 
-  balance.innerText = "$"+a.balance;
-  pnl.innerText = "PnL: "+a.total_pnl;
-  pnl.className = a.total_pnl >= 0 ? "pos" : "neg";
+    results = []
 
-  signal.innerText = d.signal;
-  signal.className = "price "+d.signal.toLowerCase();
-  confidence.innerText = "Confidence "+d.confidence+"%";
-  price.innerText = "Price $"+d.price;
+    for pair in PAIRS:
+        signal = random.choice(["BUY", "HOLD"])
+        confidence = random.randint(60, 95)
 
-  if(d.position){
-    position.innerHTML = `
-      Entry: $${d.position.entry}<br>
-      SL: $${d.position.sl.toFixed(2)}<br>
-      TP: $${d.position.tp.toFixed(2)}
-    `;
-  } else {
-    position.innerText = "None";
-  }
+        try:
+            price = round(exchange.fetch_ticker(pair)["last"], 2)
+        except:
+            price = round(random.uniform(50, 70000), 2)
 
-  autoBtn.innerText = s.enabled ? "ON" : "OFF";
-  autoBtn.className = s.enabled ? "on" : "off";
-}
+        # ===== OPEN =====
+        if AUTO_TRADE and signal == "BUY" and pair not in POSITIONS:
+            amount = 0.001 if "BTC" in pair else 0.01
+            try:
+                exchange.create_market_buy_order(pair, amount)
+            except:
+                pass
 
-async function toggleAutoTrade(){
-  await fetch(API+"/auto-trade/toggle",{method:"POST"});
-}
+            POSITIONS[pair] = {
+                "entry": price,
+                "amount": amount,
+                "sl": price * (1 - STOP_LOSS_PCT / 100),
+                "tp": price * (1 + TAKE_PROFIT_PCT / 100)
+            }
 
-loadAll();
-setInterval(loadAll, 4000);
-</script>
+        # ===== CHECK SL / TP =====
+        if pair in POSITIONS:
+            pos = POSITIONS[pair]
+            if price <= pos["sl"] or price >= pos["tp"]:
+                try:
+                    exchange.create_market_sell_order(pair, pos["amount"])
+                except:
+                    pass
 
-</body>
-</html>
+                pnl = round((price - pos["entry"]) * pos["amount"], 2)
+                BALANCE += pnl
+
+                TRADES.insert(0, {
+                    "time": int(time.time()),
+                    "pair": pair,
+                    "side": "CLOSE",
+                    "price": price,
+                    "amount": pos["amount"],
+                    "pnl": pnl
+                })
+
+                del POSITIONS[pair]
+                if len(TRADES) > 40:
+                    TRADES.pop()
+
+        results.append({
+            "pair": pair,
+            "signal": signal,
+            "confidence": confidence,
+            "price": price,
+            "position": POSITIONS.get(pair)
+        })
+
+    return jsonify(results)
+
+@app.route("/trades")
+def trades():
+    return jsonify(TRADES)
+
+@app.route("/auto-trade/status")
+def auto_trade_status():
+    return jsonify(enabled=AUTO_TRADE)
+
+@app.route("/auto-trade/toggle", methods=["POST"])
+def toggle_auto_trade():
+    global AUTO_TRADE
+    AUTO_TRADE = not AUTO_TRADE
+    return jsonify(enabled=AUTO_TRADE)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
