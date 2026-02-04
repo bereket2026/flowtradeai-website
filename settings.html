@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>API Keys</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { background:#020617; color:#e5e7eb; font-family:Arial }
+.card { background:#0f172a; padding:30px; border-radius:14px; width:360px; margin:60px auto }
+input, button { width:100%; padding:12px; margin-top:12px; border-radius:8px; border:none }
+button { background:#38bdf8; font-weight:bold; cursor:pointer }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Binance Testnet API</h2>
+  <input id="apiKey" placeholder="API Key">
+  <input id="secret" placeholder="Secret Key">
+  <button onclick="save()">Save</button>
+  <div id="msg"></div>
+</div>
+
+<script>
+const API = "https://flowtradeai-backend-v3.onrender.com";
+const token = localStorage.getItem("token");
+
+async function save(){
+  const res = await fetch(API+"/api-keys",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization": token
+    },
+    body: JSON.stringify({
+      apiKey: apiKey.value,
+      secret: secret.value
+    })
+  });
+  const d = await res.json();
+  msg.innerText = d.success ? "Connected ✔" : "Error";
+}
+</script>
+</body>
+</html>
