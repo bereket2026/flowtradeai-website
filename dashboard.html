@@ -1,126 +1,173 @@
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-import ccxt, os, random, time
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FlowTradeAI Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-app = Flask(__name__)
-CORS(app)
+<style>
+body {
+  margin:0;
+  background:#020617;
+  color:#e5e7eb;
+  font-family:Arial, sans-serif;
+}
 
-# ===== DEMO LOGIN =====
-USER = {"email": "admin@flowtradeai.com", "password": "123456"}
+header {
+  padding:16px 24px;
+  border-bottom:1px solid #1e293b;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-# ===== BINANCE TESTNET =====
-exchange = ccxt.binance({
-    "apiKey": os.getenv("BINANCE_API_KEY"),
-    "secret": os.getenv("BINANCE_SECRET"),
-    "enableRateLimit": True,
-    "options": {"defaultType": "spot"}
-})
-exchange.set_sandbox_mode(True)
+button {
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
 
-AUTO_TRADE = False
-BALANCE = 10000.0
+.primary { background:#38bdf8; }
+.secondary { background:#334155; color:white; }
+.on { background:#22c55e; }
+.off { background:#64748b; color:white; }
 
-PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
-POSITIONS = {}   # pair -> position
-TRADES = []
+.container {
+  padding:20px;
+}
 
-STOP_LOSS_PCT = 1.0
-TAKE_PROFIT_PCT = 2.0
+.card {
+  background:#0f172a;
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:20px;
+}
 
-@app.route("/")
-def home():
-    return "FlowTradeAI backend running (Multi-Pair)"
+.price { font-size:22px; font-weight:bold; }
+.pos { color:#22c55e; }
+.neg { color:#ef4444; }
+.buy { color:#22c55e; }
+.hold { color:#facc15; }
+</style>
+</head>
 
-@app.route("/login", methods=["POST"])
-def login():
-    d = request.json
-    if d and d["email"] == USER["email"] and d["password"] == USER["password"]:
-        return jsonify(success=True, token="demo-token")
-    return jsonify(success=False), 401
+<body>
 
-@app.route("/account")
-def account():
-    pnl = round(sum(t["pnl"] for t in TRADES), 2)
-    return jsonify(balance=round(BALANCE, 2), total_pnl=pnl)
+<script>
+/* ===== AUTH CHECK ===== */
+if (!localStorage.getItem("token")) {
+  window.location.href = "login.html";
+}
+</script>
 
-@app.route("/ai-signal")
-def ai_signal():
-    global BALANCE
+<header>
+  <h2>FlowTradeAI</h2>
+  <div>
+    <button class="secondary" onclick="goSettings()">API Keys</button>
+    <button class="secondary" onclick="logout()">Logout</button>
+  </div>
+</header>
 
-    results = []
+<div class="container">
 
-    for pair in PAIRS:
-        signal = random.choice(["BUY", "HOLD"])
-        confidence = random.randint(60, 95)
+  <div class="card">
+    <h3>Account</h3>
+    <div id="balance" class="price">...</div>
+    <div id="pnl"></div>
+  </div>
 
-        try:
-            price = round(exchange.fetch_ticker(pair)["last"], 2)
-        except:
-            price = round(random.uniform(50, 70000), 2)
+  <div class="card">
+    <h3>Markets</h3>
+    <div id="markets">Loading...</div>
+  </div>
 
-        # ===== OPEN =====
-        if AUTO_TRADE and signal == "BUY" and pair not in POSITIONS:
-            amount = 0.001 if "BTC" in pair else 0.01
-            try:
-                exchange.create_market_buy_order(pair, amount)
-            except:
-                pass
+  <div class="card">
+    <h3>Auto Trading</h3>
+    <button id="autoBtn" class="off" onclick="toggleAuto()">OFF</button>
+  </div>
 
-            POSITIONS[pair] = {
-                "entry": price,
-                "amount": amount,
-                "sl": price * (1 - STOP_LOSS_PCT / 100),
-                "tp": price * (1 + TAKE_PROFIT_PCT / 100)
-            }
+</div>
 
-        # ===== CHECK SL / TP =====
-        if pair in POSITIONS:
-            pos = POSITIONS[pair]
-            if price <= pos["sl"] or price >= pos["tp"]:
-                try:
-                    exchange.create_market_sell_order(pair, pos["amount"])
-                except:
-                    pass
+<script>
+/* ===== CONFIG ===== */
+const API = "https://flowtradeai-backend-v3.onrender.com";
+const TOKEN = localStorage.getItem("token");
 
-                pnl = round((price - pos["entry"]) * pos["amount"], 2)
-                BALANCE += pnl
+/* ===== HELPERS ===== */
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
 
-                TRADES.insert(0, {
-                    "time": int(time.time()),
-                    "pair": pair,
-                    "side": "CLOSE",
-                    "price": price,
-                    "amount": pos["amount"],
-                    "pnl": pnl
-                })
+function goSettings() {
+  window.location.href = "settings.html";
+}
 
-                del POSITIONS[pair]
-                if len(TRADES) > 40:
-                    TRADES.pop()
+async function apiGet(path) {
+  return fetch(API + path, {
+    headers: { "Authorization": TOKEN }
+  }).then(r => r.json());
+}
 
-        results.append({
-            "pair": pair,
-            "signal": signal,
-            "confidence": confidence,
-            "price": price,
-            "position": POSITIONS.get(pair)
-        })
+async function apiPost(path) {
+  return fetch(API + path, {
+    method: "POST",
+    headers: { "Authorization": TOKEN }
+  }).then(r => r.json());
+}
 
-    return jsonify(results)
+/* ===== LOAD DATA ===== */
+async function loadAccount() {
+  const d = await apiGet("/account");
+  balance.innerText = "$" + d.balance;
+  pnl.innerText = "PnL: " + d.total_pnl;
+  pnl.className = d.total_pnl >= 0 ? "pos" : "neg";
+}
 
-@app.route("/trades")
-def trades():
-    return jsonify(TRADES)
+async function loadMarkets() {
+  const data = await apiGet("/ai-signal");
+  markets.innerHTML = "";
 
-@app.route("/auto-trade/status")
-def auto_trade_status():
-    return jsonify(enabled=AUTO_TRADE)
+  data.forEach(m => {
+    markets.innerHTML += `
+      <div style="margin-bottom:14px">
+        <b>${m.pair}</b><br>
+        <span class="${m.signal.toLowerCase()}">${m.signal}</span>
+        | ${m.confidence}% | $${m.price}<br>
+        ${m.position ? `
+          Entry: ${m.position.entry}<br>
+          SL: ${m.position.sl.toFixed(2)}<br>
+          TP: ${m.position.tp.toFixed(2)}
+        ` : "No open position"}
+      </div>
+    `;
+  });
+}
 
-@app.route("/auto-trade/toggle", methods=["POST"])
-def toggle_auto_trade():
-    global AUTO_TRADE
-    AUTO_TRADE = not AUTO_TRADE
-    return jsonify(enabled=AUTO_TRADE)
+async function loadAutoTrade() {
+  const d = await apiGet("/auto-trade/status");
+  autoBtn.innerText = d.enabled ? "ON" : "OFF";
+  autoBtn.className = d.enabled ? "on" : "off";
+}
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+async function toggleAuto() {
+  await apiPost("/auto-trade/toggle");
+  loadAutoTrade();
+}
+
+/* ===== INIT ===== */
+async function init() {
+  await loadAccount();
+  await loadMarkets();
+  await loadAutoTrade();
+}
+
+init();
+setInterval(loadMarkets, 5000);
+setInterval(loadAccount, 6000);
+</script>
+
+</body>
+</html>
