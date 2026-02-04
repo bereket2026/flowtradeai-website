@@ -1,266 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>FlowTradeAI Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>FlowTradeAI Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      background: #020617;
-      font-family: Arial, sans-serif;
-      color: #e5e7eb;
-    }
+<style>
+body {
+  margin: 0;
+  background: #020617;
+  font-family: Arial, sans-serif;
+  color: #e5e7eb;
+}
+header {
+  padding: 15px 30px;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  justify-content: space-between;
+}
+h1 { color: #38bdf8; font-size: 20px; }
+button {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.logout { background:#ef4444; color:white; }
+.on { background:#22c55e; color:#020617; }
+.off { background:#64748b; color:white; }
 
-    header {
-      padding: 15px 30px;
-      border-bottom: 1px solid #1e293b;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    header h1 {
-      color: #38bdf8;
-      font-size: 20px;
-    }
-
-    button {
-      background: #ef4444;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .container {
-      padding: 30px;
-      max-width: 1200px;
-      margin: auto;
-    }
-
-    .badge {
-      display: inline-block;
-      background: #38bdf8;
-      color: #020617;
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: #0f172a;
-      padding: 22px;
-      border-radius: 14px;
-      box-shadow: 0 0 20px rgba(56,189,248,0.12);
-    }
-
-    .card h3 {
-      color: #38bdf8;
-      margin-bottom: 10px;
-    }
-
-    .price {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .locked {
-      opacity: 0.35;
-      filter: blur(1px);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      font-size: 14px;
-    }
-
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #1e293b;
-      text-align: left;
-    }
-
-    th {
-      color: #38bdf8;
-    }
-
-    .buy { color: #22c55e; }
-    .sell { color: #ef4444; }
-
-    .ok { color: #22c55e; }
-    .err { color: #ef4444; }
-  </style>
+.container {
+  padding: 30px;
+  max-width: 1100px;
+  margin: auto;
+}
+.card {
+  background:#0f172a;
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:20px;
+}
+.badge {
+  background:#38bdf8;
+  color:#020617;
+  padding:6px 12px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:bold;
+}
+.price { font-size:26px; font-weight:bold; }
+.buy { color:#22c55e; }
+.sell { color:#ef4444; }
+.hold { color:#facc15; }
+.locked { opacity:0.4; }
+</style>
 </head>
 
 <body>
 
 <header>
-  <h1>FlowTradeAI Dashboard</h1>
-  <button onclick="logout()">Logout</button>
+  <h1>FlowTradeAI</h1>
+  <button class="logout" onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
-  <div id="planBadge" class="badge"></div>
+<div id="planBadge" class="badge"></div>
 
-  <div class="cards">
+<div class="card">
+  <h3>BTC / USDT</h3>
+  <div id="btc" class="price">Loading...</div>
+</div>
 
-    <div class="card">
-      <h3>BTC / USDT</h3>
-      <div class="price" id="btc">Loading...</div>
-    </div>
+<div class="card">
+  <h3>AI Signal</h3>
+  <div id="signal" class="price">Loading...</div>
+  <small id="confidence"></small>
+</div>
 
-    <div class="card">
-      <h3>ETH / USDT</h3>
-      <div class="price" id="eth">Loading...</div>
-    </div>
-
-    <div class="card">
-      <h3>AI Signal</h3>
-      <div class="price" id="signal">Loading...</div>
-    </div>
-
-    <div class="card" id="autoTradeCard">
-      <h3>Auto Trading</h3>
-      <p class="ok">ENABLED</p>
-    </div>
-
-    <div class="card">
-      <h3>Backend Status</h3>
-      <p id="backend">Checking...</p>
-    </div>
-
-  </div>
-
-  <br><br>
-
-  <div class="card" id="tradeHistoryCard">
-    <h3>Trade History</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Pair</th>
-          <th>Type</th>
-          <th>Price</th>
-        </tr>
-      </thead>
-      <tbody id="trades"></tbody>
-    </table>
-  </div>
+<div class="card" id="autoTradeCard">
+  <h3>Auto Trading</h3>
+  <button id="autoBtn" class="off" onclick="toggleAutoTrade()">OFF</button>
+</div>
 
 </div>
 
 <script>
-/* ========= AUTH ========= */
+/* ===== AUTH ===== */
 if (!localStorage.getItem("token")) {
   window.location.href = "login.html";
 }
-
-/* ========= LOGOUT ========= */
 function logout() {
   localStorage.clear();
   window.location.href = "login.html";
 }
 
-/* ========= PLAN ========= */
+/* ===== PLAN ===== */
 const plan = localStorage.getItem("plan") || "starter";
 document.getElementById("planBadge").innerText =
   "PLAN: " + plan.toUpperCase();
 
-/* ========= PLAN LOCKS ========= */
+/* ===== LOCK STARTER ===== */
 if (plan === "starter") {
   document.getElementById("autoTradeCard").classList.add("locked");
-  document.getElementById("tradeHistoryCard").classList.add("locked");
-  document.getElementById("tradeHistoryCard").innerHTML =
-    "<h3>Trade History</h3><p>Upgrade to Pro to unlock</p>";
+  document.getElementById("autoTradeCard").innerHTML =
+    "<h3>Auto Trading</h3><p>Upgrade to Pro to unlock</p>";
 }
 
-/* ========= BACKEND ========= */
-async function checkBackend() {
-  const el = document.getElementById("backend");
-  try {
-    const res = await fetch("https://flowtradeai-backend-v3.onrender.com/");
-    el.innerHTML = res.ok
-      ? "<span class='ok'>Backend running</span>"
-      : "<span class='err'>Backend error</span>";
-  } catch {
-    el.innerHTML = "<span class='err'>Backend sleeping</span>";
-  }
-}
-
-/* ========= PRICES ========= */
+/* ===== PRICES ===== */
 async function loadPrices() {
-  try {
-    const btc = await fetch(
-      "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
-    ).then(r => r.json());
-
-    const eth = await fetch(
-      "https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT"
-    ).then(r => r.json());
-
-    document.getElementById("btc").innerText =
-      "$" + Number(btc.price).toFixed(2);
-
-    document.getElementById("eth").innerText =
-      "$" + Number(eth.price).toFixed(2);
-  } catch {}
+  const btc = await fetch(
+    "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+  ).then(r=>r.json());
+  document.getElementById("btc").innerText =
+    "$" + Number(btc.price).toFixed(2);
 }
 
-/* ========= AI SIGNAL ========= */
-function loadSignal() {
-  const signals = ["BUY", "SELL", "HOLD"];
-  document.getElementById("signal").innerText =
-    signals[Math.floor(Math.random() * signals.length)];
+/* ===== AI SIGNAL ===== */
+async function loadAISignal() {
+  const res = await fetch(
+    "https://flowtradeai-backend-v3.onrender.com/ai-signal"
+  );
+  const data = await res.json();
+  const el = document.getElementById("signal");
+  el.innerText = data.signal;
+  el.className = "price " + data.signal.toLowerCase();
+  document.getElementById("confidence").innerText =
+    "Confidence: " + data.confidence + "%";
 }
 
-/* ========= TRADE HISTORY (DEMO) ========= */
-function addTrade() {
-  if (plan === "starter") return;
-
-  const pairs = ["BTC/USDT", "ETH/USDT"];
-  const types = ["BUY", "SELL"];
-  const pair = pairs[Math.floor(Math.random() * pairs.length)];
-  const type = types[Math.floor(Math.random() * types.length)];
-  const price = (Math.random() * 50000 + 1000).toFixed(2);
-
-  const row = document.createElement("tr");
-  row.innerHTML = `
-    <td>${new Date().toLocaleTimeString()}</td>
-    <td>${pair}</td>
-    <td class="${type === "BUY" ? "buy" : "sell"}">${type}</td>
-    <td>$${price}</td>
-  `;
-
-  const table = document.getElementById("trades");
-  table.prepend(row);
-  if (table.children.length > 5) table.removeChild(table.lastChild);
+/* ===== AUTO TRADE ===== */
+async function refreshAutoTrade() {
+  const res = await fetch(
+    "https://flowtradeai-backend-v3.onrender.com/auto-trade/status"
+  );
+  const data = await res.json();
+  const btn = document.getElementById("autoBtn");
+  if (!btn) return;
+  btn.innerText = data.enabled ? "ON" : "OFF";
+  btn.className = data.enabled ? "on" : "off";
 }
 
-/* ========= INIT ========= */
-checkBackend();
+async function toggleAutoTrade() {
+  await fetch(
+    "https://flowtradeai-backend-v3.onrender.com/auto-trade/toggle",
+    { method:"POST" }
+  );
+  refreshAutoTrade();
+}
+
+/* ===== INIT ===== */
 loadPrices();
-loadSignal();
-addTrade();
-
+loadAISignal();
+refreshAutoTrade();
 setInterval(loadPrices, 5000);
-setInterval(loadSignal, 6000);
-setInterval(addTrade, 8000);
+setInterval(loadAISignal, 7000);
 </script>
 
 </body>
