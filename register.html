@@ -4,9 +4,9 @@
   <title>Register – FlowTradeAI</title>
 </head>
 
-<body style="font-family:Arial;background:#020617;color:white;text-align:center;padding-top:100px;">
+<body style="font-family:Arial;background:#020617;color:white;text-align:center;padding-top:80px;">
 
-<h2>Create Account</h2>
+<h1>Create Account</h1>
 
 <input id="email" placeholder="Email"><br><br>
 <input id="password" type="password" placeholder="Password"><br><br>
@@ -19,20 +19,28 @@
 const API = "https://flowtradeai-backend-v3.onrender.com";
 
 async function register() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
   try {
     const res = await fetch(API + "/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value
-      })
+      body: JSON.stringify({ email, password })
     });
 
     const data = await res.json();
+
     document.getElementById("msg").innerText =
       data.message || data.error || "Unknown response";
-  } catch (err) {
+
+    if (data.message) {
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 1000);
+    }
+
+  } catch (e) {
     document.getElementById("msg").innerText = "Backend connection failed";
   }
 }
