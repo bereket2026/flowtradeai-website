@@ -1,32 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard – FlowTradeAI</title>
+  <title>FlowTradeAI Dashboard</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #020617;
+      color: white;
+    }
+
+    header {
+      background: #020617;
+      padding: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      border-bottom: 1px solid #111827;
+    }
+
+    .container {
+      padding: 40px;
+      text-align: center;
+    }
+
+    .card {
+      background: #0f172a;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    .status {
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #22c55e;
+    }
+
+    button {
+      padding: 12px 25px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .start {
+      background: #22c55e;
+      color: black;
+    }
+
+    .stop {
+      background: #ef4444;
+      color: white;
+    }
+
+    .logout {
+      background: #374151;
+      color: white;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 
-<body style="font-family:Arial;background:#020617;color:white;text-align:center;padding-top:60px;">
+<body>
 
-<h1>FlowTradeAI Dashboard</h1>
+<header>FlowTradeAI Dashboard</header>
 
-<p id="status">Checking bot status...</p>
+<div class="container">
+  <div class="card">
 
-<br>
+    <div id="status" class="status">Ready to trade</div>
 
-<button onclick="startBot()" style="padding:12px 25px;background:#22c55e;color:black;border:none;font-size:16px;">
-Start Auto Trade
-</button>
+    <button class="start" onclick="startBot()">Start Auto Trade</button>
+    <button class="stop" onclick="stopBot()">Stop Auto Trade</button>
 
-<br><br>
+    <br>
+    <button class="logout" onclick="logout()">Logout</button>
 
-<button onclick="stopBot()" style="padding:12px 25px;background:#ef4444;color:white;border:none;font-size:16px;">
-Stop Auto Trade
-</button>
-
-<br><br><br>
-
-<button onclick="logout()" style="padding:8px 18px;background:#444;color:white;border:none;">
-Logout
-</button>
+  </div>
+</div>
 
 <script>
 const API = "https://flowtradeai-backend-v3.onrender.com";
