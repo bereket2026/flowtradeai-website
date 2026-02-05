@@ -8,68 +8,54 @@
 
 <h1>FlowTradeAI Dashboard</h1>
 
-<p id="status">Checking login...</p>
+<p id="status">Checking bot status...</p>
 
 <br>
 
-<button onclick="startBot()">Start Auto Trading</button>
-<br><br>
-<button onclick="stopBot()">Stop Auto Trading</button>
-<br><br>
-<button onclick="logout()">Logout</button>
+<button onclick="startBot()" style="padding:12px 25px;background:#22c55e;color:black;border:none;font-size:16px;">
+Start Auto Trade
+</button>
 
-<p id="msg"></p>
+<br><br>
+
+<button onclick="stopBot()" style="padding:12px 25px;background:#ef4444;color:white;border:none;font-size:16px;">
+Stop Auto Trade
+</button>
+
+<br><br><br>
+
+<button onclick="logout()" style="padding:8px 18px;background:#444;color:white;border:none;">
+Logout
+</button>
 
 <script>
 const API = "https://flowtradeai-backend-v3.onrender.com";
 const token = localStorage.getItem("token");
 
-// 🔐 Check login
 if (!token) {
   window.location.href = "login.html";
-} else {
-  document.getElementById("status").innerText = "Logged in ✔";
 }
 
-// ▶ Start trading
 async function startBot() {
-  try {
-    const res = await fetch(API + "/start-bot", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    });
+  const res = await fetch(API + "/start-bot", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token }
+  });
 
-    const data = await res.json();
-    document.getElementById("msg").innerText =
-      data.message || data.error || "Unknown response";
-  } catch {
-    document.getElementById("msg").innerText = "Backend error";
-  }
+  const data = await res.json();
+  document.getElementById("status").innerText = data.message || data.error;
 }
 
-// ⏹ Stop trading
 async function stopBot() {
-  try {
-    const res = await fetch(API + "/stop-bot", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    });
+  const res = await fetch(API + "/stop-bot", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token }
+  });
 
-    const data = await res.json();
-    document.getElementById("msg").innerText =
-      data.message || data.error || "Unknown response";
-  } catch {
-    document.getElementById("msg").innerText = "Backend error";
-  }
+  const data = await res.json();
+  document.getElementById("status").innerText = data.message || data.error;
 }
 
-// 🚪 Logout
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "login.html";
