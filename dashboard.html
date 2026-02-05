@@ -12,11 +12,11 @@
     }
 
     header {
-      background: #020617;
       padding: 20px;
       font-size: 22px;
       font-weight: bold;
       border-bottom: 1px solid #111827;
+      text-align: center;
     }
 
     .container {
@@ -28,41 +28,35 @@
       background: #0f172a;
       padding: 30px;
       border-radius: 12px;
-      max-width: 400px;
+      max-width: 420px;
       margin: auto;
       box-shadow: 0 0 20px rgba(0,0,0,0.4);
     }
 
+    .price {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: #22c55e;
+    }
+
     .status {
       margin-bottom: 20px;
-      font-size: 18px;
-      color: #22c55e;
+      font-size: 16px;
+      color: #94a3b8;
     }
 
     button {
       padding: 12px 25px;
-      margin: 10px;
+      margin: 8px;
       font-size: 16px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
     }
 
-    .start {
-      background: #22c55e;
-      color: black;
-    }
-
-    .stop {
-      background: #ef4444;
-      color: white;
-    }
-
-    .logout {
-      background: #374151;
-      color: white;
-      margin-top: 20px;
-    }
+    .start { background: #22c55e; color: black; }
+    .stop { background: #ef4444; color: white; }
+    .logout { background: #374151; color: white; margin-top: 15px; }
   </style>
 </head>
 
@@ -73,7 +67,8 @@
 <div class="container">
   <div class="card">
 
-    <div id="status" class="status">Ready to trade</div>
+    <div id="btcPrice" class="price">Loading BTC price...</div>
+    <div id="status" class="status">Bot idle</div>
 
     <button class="start" onclick="startBot()">Start Auto Trade</button>
     <button class="stop" onclick="stopBot()">Stop Auto Trade</button>
@@ -91,6 +86,27 @@ const token = localStorage.getItem("token");
 if (!token) {
   window.location.href = "login.html";
 }
+
+/* ================= LIVE BTC PRICE ================= */
+
+async function loadPrice() {
+  try {
+    const res = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
+    const data = await res.json();
+
+    const price = parseFloat(data.price).toLocaleString();
+    document.getElementById("btcPrice").innerText = "BTC/USDT $" + price;
+  } catch {
+    document.getElementById("btcPrice").innerText = "Price unavailable";
+  }
+}
+
+// refresh every 5 seconds
+loadPrice();
+setInterval(loadPrice, 5000);
+
+
+/* ================= BOT CONTROL ================= */
 
 async function startBot() {
   const res = await fetch(API + "/start-bot", {
