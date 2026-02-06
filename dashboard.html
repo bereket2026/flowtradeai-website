@@ -1,138 +1,152 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FlowTradeAI Dashboard</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #020617;
+      background: #0f172a;
       color: white;
     }
 
     header {
       padding: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      border-bottom: 1px solid #111827;
-      text-align: center;
+      background: #020617;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e293b;
     }
 
     .container {
-      padding: 40px;
-      text-align: center;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
     }
 
     .card {
-      background: #0f172a;
-      padding: 30px;
-      border-radius: 12px;
-      max-width: 420px;
-      margin: auto;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
     }
 
-    .price {
-      font-size: 32px;
-      margin-bottom: 10px;
-      color: #22c55e;
-    }
-
-    .status {
-      margin-bottom: 20px;
-      font-size: 16px;
+    .title {
+      font-size: 14px;
       color: #94a3b8;
     }
 
-    button {
-      padding: 12px 25px;
-      margin: 8px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+    .value {
+      font-size: 28px;
+      margin-top: 10px;
     }
 
-    .start { background: #22c55e; color: black; }
-    .stop { background: #ef4444; color: white; }
-    .logout { background: #374151; color: white; margin-top: 15px; }
+    canvas {
+      background: #020617;
+      border-radius: 16px;
+      padding: 10px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      background: #22c55e;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .btn.stop {
+      background: #ef4444;
+      color: white;
+    }
   </style>
 </head>
-
 <body>
+  <header>
+    <h2>🚀 FlowTradeAI</h2>
+    <span id="status">Connecting...</span>
+  </header>
 
-<header>FlowTradeAI Dashboard</header>
+  <div class="container">
+    <div class="card">
+      <div class="title">Balance (USDT)</div>
+      <div class="value" id="balance">--</div>
+    </div>
 
-<div class="container">
-  <div class="card">
+    <div class="card">
+      <div class="title">Total PnL</div>
+      <div class="value" id="pnl">--</div>
+    </div>
 
-    <div id="btcPrice" class="price">Loading BTC price...</div>
-    <div id="status" class="status">Bot idle</div>
-
-    <button class="start" onclick="startBot()">Start Auto Trade</button>
-    <button class="stop" onclick="stopBot()">Stop Auto Trade</button>
-
-    <br>
-    <button class="logout" onclick="logout()">Logout</button>
-
+    <div class="card">
+      <div class="title">Bot Status</div>
+      <div class="value" id="bot">Stopped</div>
+      <button class="btn" onclick="startBot()">Start Bot</button>
+      <button class="btn stop" onclick="stopBot()">Stop Bot</button>
+    </div>
   </div>
-</div>
 
-<script>
-const API = "https://flowtradeai-backend-v3.onrender.com";
-const token = localStorage.getItem("token");
+  <div style="padding:20px;">
+    <canvas id="pnlChart" height="100"></canvas>
+  </div>
 
-if (!token) {
-  window.location.href = "login.html";
-}
+  <script>
+    const API = "https://flowtradeai-backend-v3.onrender.com";
 
-/* ================= LIVE BTC PRICE ================= */
+    async function loadAccount() {
+      try {
+        const res = await fetch(API + "/account");
+        const data = await res.json();
 
-async function loadPrice() {
-  try {
-    const res = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
-    const data = await res.json();
+        document.getElementById("balance").innerText = data.balance ?? 0;
+        document.getElementById("pnl").innerText = data.pnl ?? 0;
+        document.getElementById("status").innerText = data.status ?? "Connected";
+      } catch (err) {
+        document.getElementById("status").innerText = "Offline";
+      }
+    }
 
-    const price = parseFloat(data.price).toLocaleString();
-    document.getElementById("btcPrice").innerText = "BTC/USDT $" + price;
-  } catch {
-    document.getElementById("btcPrice").innerText = "Price unavailable";
-  }
-}
+    function startBot() {
+      document.getElementById("bot").innerText = "Running";
+    }
 
-// refresh every 5 seconds
-loadPrice();
-setInterval(loadPrice, 5000);
+    function stopBot() {
+      document.getElementById("bot").innerText = "Stopped";
+    }
 
+    const ctx = document.getElementById("pnlChart");
 
-/* ================= BOT CONTROL ================= */
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+        datasets: [{
+          label: "PnL",
+          data: [0, 10, -5, 20, 25],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+      }
+    });
 
-async function startBot() {
-  const res = await fetch(API + "/start-bot", {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + token }
-  });
-
-  const data = await res.json();
-  document.getElementById("status").innerText = data.message || data.error;
-}
-
-async function stopBot() {
-  const res = await fetch(API + "/stop-bot", {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + token }
-  });
-
-  const data = await res.json();
-  document.getElementById("status").innerText = data.message || data.error;
-}
-
-function logout() {
-  localStorage.removeItem("token");
-  window.location.href = "login.html";
-}
-</script>
-
+    loadAccount();
+    setInterval(loadAccount, 5000);
+  </script>
 </body>
 </html>
